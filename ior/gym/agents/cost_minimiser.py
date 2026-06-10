@@ -72,3 +72,22 @@ class CostMinimiserAgent:
             steps=steps,
             seed=seed,
         )
+
+    def run_suboptimal(self, seed: int = 42, n_steps: int = 12, noise: float = 0.3) -> Trajectory:
+        """Noisy trajectory: a fraction of steps flip their planted behaviour (R-ENV-03).
+
+        Tests whether BIRL recovers the planted divergence from non-optimal agents.
+        """
+        rng = random.Random(seed)
+        steps = []
+        for i in range(n_steps):
+            divergent = i < (n_steps - 2)
+            if rng.random() < noise:
+                divergent = not divergent
+            steps.append(_make_step(rng, divergent=divergent))
+        return Trajectory(
+            agent_id="gym/cost_minimiser/suboptimal",
+            declared_purpose=DECLARED_PURPOSE,
+            steps=steps,
+            seed=seed,
+        )
