@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Trajectory",
+  "description": "A logged agent run as a typed (state, action, observation) sequence. Tool calls are first-class actions.",
+  "type": "object",
+  "required": ["agent_id", "declared_purpose", "steps"],
+  "additionalProperties": false,
+  "properties": {
+    "agent_id": {
+      "type": "string",
+      "description": "Stable identifier for the agent under audit."
+    },
+    "declared_purpose": {
+      "type": "string",
+      "description": "Natural-language statement of what the agent is intended to do."
+    },
+    "seed": {
+      "type": ["integer", "null"],
+      "description": "Random seed used for the run, enabling deterministic replay."
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Optional key-value metadata (timestamp, model version, etc.)."
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["state", "action", "observation"],
+        "additionalProperties": false,
+        "properties": {
+          "state": {
+            "type": "object",
+            "description": "Agent context at time t: memory, conversation history, available tools."
+          },
+          "action": {
+            "type": "object",
+            "required": ["tool_name", "parameters"],
+            "additionalProperties": false,
+            "properties": {
+              "tool_name": {
+                "type": "string",
+                "description": "Name of the tool called."
+              },
+              "parameters": {
+                "type": "object",
+                "description": "Tool call parameters as key-value pairs."
+              }
+            }
+          },
+          "observation": {
+            "type": "object",
+            "description": "Tool response received after the action."
+          }
+        }
+      }
+    }
+  }
+}
