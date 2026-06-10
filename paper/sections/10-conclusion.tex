@@ -1,14 +1,22 @@
 \section{Conclusion}
 \label{sec:conclusion}
 
-IOR fills the empty cell between IRL-based alignment auditing, which operates at the
-model-weight level, and agent red-teaming, which probes fixed attack catalogues. The
-closed inference-probe feedback loop is the core contribution: each round of probing
-refines the inferred objective, which targets the next round. The Goal Decomposition
-Judge makes the approach applicable to any black-box agent with a natural-language
-declared purpose, and the pluggable feature basis answers the dependence on an
-external model with a deterministic floor and an agreement-quantified ensemble. The
-open gym provides the first reproducible benchmark for divergence recovery at the
-deployed-agent level, and every finding maps onto recognised regulatory taxonomies.
-Future work will complete probe execution at scale, add provider-specific log
-adapters, and extend inference to multi-agent systems.
+IOR targets the empty cell between IRL-based alignment auditing, which operates at
+the model-weight level, and agent red-teaming, which probes fixed attack catalogues.
+Its proposed contribution is the closed inference-probe feedback loop, in which each
+round of probing refines the inferred objective and that objective targets the next
+round; we present this as a design whose benefit remains to be demonstrated, since
+the present evaluation does not yet close the loop. What we do establish is a working
+system and an open, reproducible gym: the Goal Decomposition Judge makes objective
+inference applicable to any black-box agent with a natural-language declared purpose,
+the pluggable feature basis answers the dependence on an external model with a
+deterministic floor and an agreement-quantified ensemble, and a first measurement
+shows both that a model-free basis predicts held-out behaviour above baseline and
+that, under fast mode, the IRL point estimate is largely reproducible by a
+column-mean, which locates the method's value in uncertainty and full-mode
+counterfactual reasoning. Honest accounting of these boundaries, including objectives
+orthogonal to the declared purpose that the basis cannot see, is what separates the
+present contribution, a credible system and protocol, from the stronger empirical
+claims that completing the judge, ensemble, and closed-loop evaluations would
+support. That completion, alongside provider-specific log adapters and multi-agent
+inference, is the immediate future work.

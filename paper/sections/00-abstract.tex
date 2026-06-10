@@ -13,8 +13,15 @@ the next round of probes. A Goal Decomposition Judge bridges natural-language
 purposes into the feature space IRL requires without access to model internals,
 and a pluggable feature basis spans a deterministic model-free floor, a single
 language-model judge, and a judge ensemble with quantified inter-judge agreement.
-We evaluate on three planted-divergence reference environments and report
-behaviour-prediction lift and targeted-probe hit-rate against uniform red-teaming.
-Every finding maps to OWASP, MITRE ATLAS, and NIST AI RMF taxonomy nodes, making
-the output legible to regulators auditing intended-purpose conformity under the
-EU AI Act.
+We describe the full audit protocol and contribute an open gym of three
+planted-divergence reference environments for evaluating it. As an initial result,
+a deterministic model-free feature basis predicts held-out agent behaviour with a
+mean log-loss reduction of $0.335$ over a uniform baseline, and we show that under
+the fast-mode approximation the Bayesian IRL divergence ranking is largely
+reproducible by a simple column-mean of the judge scores (Spearman $0.913$),
+which locates the method's distinctive value in uncertainty quantification and
+full-mode counterfactual reasoning rather than in the point estimate. The targeted
+probing, divergence-recovery, and closed-loop evaluations are specified as
+protocols; their measurement is ongoing. Findings are designed to map onto OWASP,
+MITRE ATLAS, and NIST AI RMF taxonomy nodes so that output is legible to regulators
+auditing intended-purpose conformity under the EU AI Act.

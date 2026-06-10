@@ -16,7 +16,7 @@ overlap. First, agent red-teaming and misalignment benchmarks
 fixed attack catalogues; they establish that deployed agents can and do behave in
 misaligned ways, but they do not infer what an agent is optimising for, and they do
 not use such an inference to steer probing. Second, IRL for alignment auditing
-\citep{alignmentAuditor2025, ir3_2026, insightsInverse2024} reconstructs objectives
+\citep{alignmentAuditor2025, ir3contrastive, insightsInverse2024} reconstructs objectives
 from model weights or RLHF training signals; these methods are not applicable to
 deployed black-box agents accessible only through an API. Third, goal inference
 from behaviour \citep{sips2020, communicatingAgents2023} operates in structured
@@ -32,9 +32,11 @@ this cell.
 
 \paragraph{Contributions.}
 \begin{itemize}[leftmargin=1.4em]
-  \item IOR, the first closed-loop system connecting goal inference to adversarial
-  probe targeting at the deployed-agent level. Inference steers probing, and probe
-  results refine inference.
+  \item IOR, a system design that connects goal inference to adversarial probe
+  targeting at the deployed-agent level through a closed loop in which inference
+  steers probing and probe results refine inference. We present the loop as a
+  design and evaluate its components; closing it empirically is future work
+  (Section~\ref{sec:limitations}).
   \item The Goal Decomposition Judge, which bridges natural-language declared
   purposes into the feature space that IRL requires without access to model
   weights, together with a pluggable feature basis spanning a deterministic

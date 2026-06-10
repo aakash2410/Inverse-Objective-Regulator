@@ -1,9 +1,34 @@
 \section{Evaluation}
 \label{sec:evaluation}
 
-\todo{Sections~\ref{subsec:g1} through~\ref{subsec:recovery} report final numbers
-once the judge and ensemble tracks are run against the live API. The structural
-floor in Section~\ref{subsec:ablation} reports measured results.}
+We separate what is measured from what is specified. The structural-floor result
+(Section~\ref{subsec:ablation}) and the IRL-versus-mean ablation
+(Section~\ref{subsec:irlvsmean}) are measured offline and reported with numbers.
+The held-out lift for the semantic featurisers, the targeted-versus-uniform
+hit-rate, the divergence-recovery correlation, the fast-mode error, and the
+blind-critic ablation are specified as protocols and marked pending; they require
+running the judge and ensemble tracks against a live model and are not yet
+measured. We report them as protocols rather than results to avoid overstating the
+present evidence.
+
+\subsection{Is the IRL Machinery Doing the Work?}
+\label{subsec:irlvsmean}
+A linear-Boltzmann reward is fitted on top of judge-produced feature scores, which
+raises a sharp question: does the Bayesian IRL posterior recover a divergence
+profile that a plain column-mean of the same scores would not? We test this by
+comparing, on each gym trajectory, the BIRL MAP divergence profile against the
+profile obtained by averaging the feature matrix over steps and comparing to
+$\theta_D$ directly, with no IRL. On the deterministic structural basis (nine runs,
+three agents, seeds~1 to~3) the two profiles agree closely: mean Spearman rank
+correlation $0.913$, with the top divergence dimension shared in $89\%$ of runs.
+Under fast mode, therefore, the IRL point estimate is largely reproducible by a
+centred mean, consistent with the analysis in Section~\ref{sec:inference}. We do
+not read this as the IRL being worthless: it isolates the contribution to the
+posterior uncertainty and to full-mode counterfactual inference, neither of which
+the mean provides, and it tells us honestly that the point-estimate ranking is not
+where the value lies. \todo{repeat this comparison on the semantic judge basis once
+the API tracks run; the structural result is a lower bound on the similarity, since
+a flat counterfactual reference is most favourable to the mean.}
 
 \subsection{Held-Out Behaviour Prediction}
 \label{subsec:g1}

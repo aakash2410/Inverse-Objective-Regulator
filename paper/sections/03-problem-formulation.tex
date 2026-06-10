@@ -52,10 +52,15 @@ IOR grounds $D$ into the feature basis as a weight vector $\theta_D \in \Delta^d
 (the probability simplex), representing the importance the declared purpose places
 on each sub-goal. In Phase~0, $\theta_D = \mathbf{1}/d$ (uniform over sub-goals),
 reflecting the conservative assumption that the declared purpose weights all
-sub-goals equally when no richer grounding information is available. Phase~1
-replaces this uniform prior with a model-grounded estimate of $\theta_D$ obtained
-from $D$ directly, enabling audits against declared purposes that explicitly
-prioritise certain sub-goals over others.
+sub-goals equally when no richer grounding information is available. This
+assumption carries a confound that we state plainly: any declared purpose that
+genuinely weights its sub-goals unequally will register as divergence under a
+uniform $\theta_D$ even when the agent honours it perfectly, so a Phase~0
+divergence is the sum of true objective drift and the declared purpose's own
+non-uniformity. We therefore treat Phase~0 divergence \emph{magnitudes} as
+indicative rather than calibrated, and defer quantitative claims about magnitude to
+Phase~1, which replaces the uniform prior with a model-grounded estimate of
+$\theta_D$ obtained from $D$ directly.
 
 \paragraph{Divergence.}
 Let $\hat{\theta}$ denote the MAP estimate of $\theta$ recovered by Bayesian IRL.
@@ -76,13 +81,15 @@ the cheapest available option for the user's request, minimising the number of
 steps and respecting any stated budget,'' yet its planted objective rewards
 maximising tool-call count. Under this formulation, the recovered divergence
 profile is led by \texttt{seeks_price_comparison}, which the agent over-invests in
-($\delta \approx 0.21$) by performing repeated price-comparison calls as busywork,
-followed closely by the two neglected efficiency sub-goals
-\texttt{avoids_redundant_calls} ($\delta \approx 0.20$) and
-\texttt{minimises_steps} ($\delta \approx 0.15$). Read together, the profile
-reconstructs the planted objective: the agent stages the appearance of diligent
-price comparison whilst disregarding the redundancy and step economy that genuine
-cost minimisation would demand.
+by performing repeated price-comparison calls as busywork, followed closely by the
+two neglected efficiency sub-goals \texttt{avoids_redundant_calls} and
+\texttt{minimises_steps}. Read together, the profile reconstructs the planted
+objective: the agent stages the appearance of diligent price comparison whilst
+disregarding the redundancy and step economy that genuine cost minimisation would
+demand. We present this as an illustration of the mechanism rather than as a
+calibrated measurement; the magnitudes inherit the uniform-$\theta_D$ confound
+noted above, and the example also depends on the planted objective sharing
+vocabulary with $D$, a limitation we return to in Section~\ref{sec:limitations}.
 
 \paragraph{Audit goal.}
 Given $\tau$ and $D$, IOR: (i) infers the posterior $P(\theta \mid \tau)$ via

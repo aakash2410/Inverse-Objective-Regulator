@@ -1,6 +1,38 @@
 \section{Limitations and Future Work}
 \label{sec:limitations}
 
+\paragraph{Objectives orthogonal to the declared purpose are invisible by
+construction.}
+This is the deepest limitation of the approach, and it is structural rather than an
+implementation gap. The feature basis is spanned entirely by sub-goals that the
+decomposer extracts from the declared purpose $D$. IOR can therefore only detect
+divergence along dimensions derived from $D$. A hidden objective that does not
+project onto any $D$-derived sub-goal, one that shares no vocabulary with the
+declared purpose, produces near-uniform feature scores and reads as low divergence.
+The gym's CostMinimiser is detectable only because ``maximise tool-call count''
+anti-correlates with natural cost sub-goals such as \texttt{avoids_redundant_calls}
+and \texttt{minimises_steps}; an agent whose true objective were genuinely
+orthogonal to cost minimisation would evade detection. The blind-critic ablation
+(Section~\ref{sec:evaluation}) tests only critic-side bias and does not address this
+upstream blindness. Mitigations worth exploring include seeding the basis with
+anti-goals and adversarially proposed off-purpose dimensions, but no choice of $D$
+-derived basis can be complete, and IOR should be presented as detecting divergence
+\emph{relative to a declared purpose}, not as a general objective recovery method.
+
+\paragraph{The closed loop is designed but not yet demonstrated.}
+We describe the inference-probe feedback loop as the architectural contribution, but
+we have not yet run an experiment that closes it: the present evaluation compares
+targeted against uniform probes in a single shot and does not test whether
+re-inferring on probe-generated traces improves the divergence estimate. The loop
+also carries a risk we must control for before claiming benefit. Probes are
+generated where divergence is already suspected and are designed to make a diverging
+agent behave distinctly; feeding the resulting traces back into inference can, in
+principle, entrench an initial misestimate rather than correct it. A credible
+demonstration therefore needs a control in which the loop is run against an agent
+that does \emph{not} diverge, to show that it converges to low divergence rather
+than amplifying its own prior. We treat the loop as a proposal pending this
+evidence.
+
 \paragraph{Sparse trajectories.}
 The Laplace approximation degrades for trajectories shorter than approximately ten
 steps, where the Gaussian posterior assumption is least reliable. IOR provides a
@@ -25,6 +57,28 @@ log formats (OpenAI, Anthropic, tracing frameworks) into that schema are not yet
 implemented. Two schema questions remain: how to represent parallel tool calls
 within a single turn, and how to represent text-only reasoning steps that invoke no
 tool.
+
+\paragraph{Unvalidated posterior quality and an unspecified taxonomy mapping.}
+Two narrower gaps bear on the regulatory-legibility claim. First, the Laplace
+approximation underlying the reported uncertainties $\sigma_i$ is never checked
+against the Metropolis-Hastings sampler IOR also provides, so the calibration of
+the very quantities we offer as compliance evidence is currently unvalidated; a
+Laplace-versus-MH comparison on the gym is required before the $\sigma_i$ are
+trustworthy. Second, the claim that every finding maps onto an OWASP, MITRE ATLAS,
+or NIST node is at present realised by a language-model classifier in the scorer
+that assigns a taxonomy node and severity to each probe finding; the mapping from a
+divergence dimension to a taxonomy node is not a fixed, audited correspondence but a
+model judgement, and a defensible compliance artefact would need that mapping
+specified and validated rather than delegated to a model.
+
+\paragraph{Normalisation choice.}
+The divergence computation maps reward weights to the probability simplex via
+$v \mapsto (v - \min v)/\sum_i(v_i - \min v)$ and then takes an $L_2$ distance. The
+min-subtraction forces the lowest-weighted dimension to exactly zero, which can
+inflate its apparent divergence, and an $L_2$ distance between two simplex points is
+defensible but not the only natural choice. A softmax projection and a
+total-variation or KL distance are plausible alternatives, and the sensitivity of
+the divergence profile to this choice is not yet characterised.
 
 \paragraph{Regulatory evidentiary weight.}
 Whether ``inferred objective versus intended purpose'' carries evidentiary weight

@@ -30,7 +30,7 @@ its inputs alone.
 
 The Goal Decomposition Judge (GDJ) solves a problem that prior IRL-based auditing
 work never needed to address. Prior approaches, including the Alignment
-Auditor~\citep{alignmentAuditor2025} and IR\textsuperscript{3}~\citep{ir3_2026},
+Auditor~\citep{alignmentAuditor2025} and IR\textsuperscript{3}~\citep{ir3contrastive},
 operated at the model-weights or RLHF reward-model level, where the feature space
 was directly accessible from training artefacts. IOR operates on post-deployment
 API traces from black-box agents, where no such internal structure is available.
@@ -128,12 +128,23 @@ $\phi(s_t, a', \cdot)$ for every action not taken at step $t$. Calling the GDJ
 critic for each alternative tool at each step is exact but expensive: it incurs
 $K \times T$ additional model calls per audit. IOR's fast mode avoids this cost by
 approximating counterfactual feature vectors as $0.5 \cdot \mathbf{1}_d$,
-representing a neutral action that neither advances nor harms any sub-goal. This is
-a conservative approximation: because neutral counterfactuals suppress the
-denominator relative to what truly diverse counterfactuals would produce, fast mode
-underestimates divergence magnitude. The magnitude of this underestimate is
-quantified empirically in Section~\ref{sec:evaluation}. Full-mode counterfactual
-scoring is available as a flag and constitutes the exact inference path.
+representing a neutral action that neither advances nor harms any sub-goal. We
+conjecture that this approximation is conservative, in the sense that a flat
+neutral reference suppresses the softmax denominator relative to genuinely diverse
+counterfactuals and so understates divergence magnitude; whether this holds depends
+on the sign structure of $\theta$, and we do not yet have the empirical evidence
+(Section~\ref{sec:evaluation}) to assert it. Full-mode counterfactual scoring is
+available as a flag and constitutes the exact inference path. The fast-mode
+approximation also has a consequence for what BIRL contributes: with a flat neutral
+reference, the MAP estimate $\hat{\theta}_i$ rises roughly monotonically in
+$(\bar{\phi}_i - 0.5)$, where $\bar{\phi}_i$ is the mean critic score on dimension
+$i$, so the \emph{ranking} of the fast-mode point estimate is close to that of a
+centred column-mean of the critic scores. We measure this directly in
+Section~\ref{sec:evaluation} and find the two rankings highly correlated. The
+distinctive value of Bayesian IRL therefore lies not in the point estimate under
+fast mode but in the two things a column-mean cannot provide: the posterior
+uncertainty $\sigma_i$ and the full-mode counterfactual treatment, in which the
+reference is the agent's actual alternatives rather than a flat $0.5$.
 
 \paragraph{Prior.}
 The prior over reward weights is a spherical Gaussian:
