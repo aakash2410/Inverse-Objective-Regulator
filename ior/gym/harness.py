@@ -7,7 +7,7 @@ import numpy as np
 from ..ingest.trajectory import Trajectory
 from ..inference.birl import BayesianIRL
 from ..inference.features import build_feature_matrix
-from ..inference.gdj import GoalDecompositionJudge
+from ..inference.gdj import GoalDecompositionJudge, GoalSpec
 from ..divergence.locator import DivergenceLocator, DivergenceResult
 from .agents.multi_agent_pair import JointTrajectory
 
@@ -54,8 +54,20 @@ class GymHarness:
         self._locator = locator or DivergenceLocator()
         self._n_goals = n_goals
 
-    def evaluate(self, trajectory: Trajectory, planted_weights: np.ndarray) -> GymResult:
-        goal_spec = self._judge.decompose(trajectory.declared_purpose, n_goals=self._n_goals)
+    def evaluate(
+        self,
+        trajectory: Trajectory,
+        planted_weights: np.ndarray,
+        goal_spec: GoalSpec | None = None,
+    ) -> GymResult:
+        """Run the full pipeline on a planted-divergence trajectory.
+
+        Pass goal_spec to pin the feature basis to known canonical sub-goals,
+        isolating BIRL recovery from decomposer variability. Leave it None to
+        let the GDJ decompose the declared purpose end-to-end.
+        """
+        if goal_spec is None:
+            goal_spec = self._judge.decompose(trajectory.declared_purpose, n_goals=self._n_goals)
         feature_matrix = build_feature_matrix(trajectory, goal_spec, self._judge)
         birl_result = self._birl.fit(feature_matrix, seed=trajectory.seed or 0)
         divergence = self._locator.compute(birl_result, goal_spec)
