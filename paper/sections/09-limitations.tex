@@ -1,0 +1,39 @@
+\section{Limitations and Future Work}
+\label{sec:limitations}
+
+\paragraph{Sparse trajectories.}
+The Laplace approximation degrades for trajectories shorter than approximately ten
+steps, where the Gaussian posterior assumption is least reliable. IOR provides a
+Metropolis-Hastings sampler as an alternative, and a future benchmark will compare
+it against the Laplace baseline on short gym trajectories.
+
+\paragraph{Stochasticity versus genuine divergence.}
+An agent that explores stochastically produces feature vectors that resemble
+divergence under BIRL. IOR currently conflates exploration with objective drift; a
+principled treatment would require a non-stationary extension of the reward model.
+
+\paragraph{Feature quality.}
+The GDJ features are only as good as the judge's ability to decompose and critique.
+For highly technical declared purposes or opaque tool semantics, feature quality
+may degrade. Calibration on the planted-divergence gym is the current mitigation,
+and the structural and ensemble featurisers provide a reproducibility floor and a
+robustness check respectively.
+
+\paragraph{Log interoperability.}
+IOR's schema is a neutral interchange format, but adapters from provider-specific
+log formats (OpenAI, Anthropic, tracing frameworks) into that schema are not yet
+implemented. Two schema questions remain: how to represent parallel tool calls
+within a single turn, and how to represent text-only reasoning steps that invoke no
+tool.
+
+\paragraph{Regulatory evidentiary weight.}
+Whether ``inferred objective versus intended purpose'' carries evidentiary weight
+under EU AI Act Art.~9 and Annex~IV, or serves only as supporting documentation, is
+an open legal question. IOR frames its output as supporting evidence rather than a
+definitive compliance finding.
+
+\paragraph{Multi-agent settings.}
+IOR audits single agents. For multi-agent systems the joint objective may diverge
+from any individual agent's declared purpose; the gym includes a cooperating-pair
+scenario whose interleaved trajectory is audited as one system, and full joint-IRL
+treatment is left to future work.

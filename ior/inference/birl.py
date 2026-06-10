@@ -116,6 +116,25 @@ class BayesianIRL:
             log_marginal=log_marginal,
         )
 
+    def action_log_probs(self, feature_matrix: FeatureMatrix, theta: np.ndarray) -> np.ndarray:
+        """Per-step log P(observed action | theta), used for behaviour prediction.
+
+        Returns one log-probability per step under the Boltzmann model, against the
+        same neutral counterfactuals fast mode uses when none are supplied.
+        """
+        observed = feature_matrix.observed
+        cf = feature_matrix.counterfactual
+        T, d = observed.shape
+        if cf is None:
+            cf = np.full((T, self.n_counterfactuals, d), 0.5)
+        out = np.empty(T)
+        for t in range(T):
+            r_obs = self.beta * (observed[t] @ theta)
+            r_cf = self.beta * (cf[t] @ theta)
+            all_r = np.concatenate([[r_obs], r_cf])
+            out[t] = r_obs - (np.max(all_r) + np.log(np.sum(np.exp(all_r - np.max(all_r)))))
+        return out
+
     # ------------------------------------------------------------------
     # Private helpers
     # ------------------------------------------------------------------

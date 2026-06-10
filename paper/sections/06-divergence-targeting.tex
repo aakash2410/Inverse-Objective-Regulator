@@ -1,0 +1,31 @@
+\section{Divergence Computation and Probe Targeting}
+\label{sec:divergence}
+
+\subsection{Divergence Computation}
+Both $\hat{\theta}$ and $\theta_D$ are normalised to the probability simplex, after
+which the per-dimension divergence is $\delta_i = |\hat{\theta}_i - \theta_{D,i}|$
+and the scalar divergence is $\|\hat{\theta} - \theta_D\|_2$. Each $\delta_i$ is
+reported with a standard deviation drawn from the posterior samples, and the
+dimensions are returned sorted by magnitude. Because over-investing in one sub-goal
+necessarily reallocates weight away from others, the divergence profile is
+two-sided and IOR reports both over-valued and neglected dimensions.
+
+\begin{figure}[h]
+\figplaceholder{Figure~\ref{fig:divbars}: ranked divergence bar chart per gym
+agent. Horizontal bars sorted by magnitude, coloured by direction (over-valued
+versus neglected), with posterior standard-deviation whiskers.}
+\caption{Ranked divergence profiles for the gym agents.}
+\label{fig:divbars}
+\end{figure}
+
+\subsection{Probe Targeting}
+The top-$k$ divergence dimensions define the targeting signal. For each, a
+generator constructs a probe that places the agent in a situation where an agent
+genuinely honouring the sub-goal would behave distinctly from one that does not.
+For example, if $\delta$ is largest on \texttt{seeks_price_comparison}
+(over-invested) with \texttt{avoids_redundant_calls} close behind (neglected), the
+probe presents a scenario in which a rational cost-minimising agent would call at
+most one tool, then measures whether the agent under audit instead stages repeated
+price-comparison calls. Each probe is tagged with the divergence dimension it
+addresses, so that downstream findings trace back to a specific component of the
+inferred objective.

@@ -268,6 +268,18 @@ theta ~ N(0, sigma^2 * I)
 ### 8.5 GDJ Blind-Critic Ablation
 Compare feature matrices produced by the critic (a) given the declared purpose and (b) blind to it. Report: (i) correlation between the two feature matrices; (ii) whether divergence recovery degrades under the blind condition. This addresses the confirmation bias risk (Section 5.2).
 
+### 8.6 Feature-Basis Ablation (resolves Q2)
+We compare three featurisers head-to-head on held-out behaviour-prediction lift (G1), the one metric comparable across bases since it concerns action prediction rather than semantic divergence:
+- **Structural** (deterministic, model-free): a fixed behavioural basis (action novelty, tool repetition, parameter novelty, payload size, observation non-emptiness). No external model, perfectly reproducible.
+- **Single judge** (the headline GDJ configuration).
+- **Ensemble judge**: several diverse models averaged, with inter-judge agreement (mean pairwise Pearson r) reported as a quantifiable reliability metric that addresses the external-model-dependence concern.
+
+**Preliminary result:** the structural floor alone achieves a mean behaviour-prediction lift of 0.335 across the three gym agents (seeds 1 to 3), already exceeding the G1 target of 0.20 with zero external dependency. This establishes that a reproducible, model-free basis carries genuine predictive signal; the semantic judges are then evaluated for what they add on top, namely divergence localisation against declared sub-goals, which the structural basis cannot provide.
+
+**Table 4:** Behaviour-prediction lift by featuriser and agent, plus inter-judge agreement for the ensemble.
+
+Note on roles: only the semantic featurisers (single judge, ensemble) support divergence recovery against a declared objective (Sections 8.1 to 8.3), because the structural basis is behavioural rather than purpose-grounded. The structural track is therefore a predictive floor, not a divergence detector.
+
 ---
 
 ## 9. Limitations and Future Work (~0.75 pages)

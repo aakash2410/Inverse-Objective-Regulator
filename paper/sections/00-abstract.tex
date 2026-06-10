@@ -1,0 +1,20 @@
+Deployed artificial-intelligence agents are increasingly governed by a stated
+natural-language purpose, yet no existing tool measures whether an agent actually
+pursues that purpose. Agent red-teaming probes systems against fixed attack
+catalogues, and inverse reinforcement learning (IRL) reconstructs an agent's
+implicit objective only at the model-weight or training level, which closed
+deployments do not expose. We introduce the Inverse-Objective Regulator (IOR), a
+black-box system that infers a revealed objective from an agent's tool-call
+trajectories using Bayesian IRL, computes its divergence from the declared
+purpose over a shared feature basis, and steers adversarial probes at the
+dimensions of highest divergence. The inference-probe feedback loop is the core
+contribution: probe results refine the inferred objective, which in turn targets
+the next round of probes. A Goal Decomposition Judge bridges natural-language
+purposes into the feature space IRL requires without access to model internals,
+and a pluggable feature basis spans a deterministic model-free floor, a single
+language-model judge, and a judge ensemble with quantified inter-judge agreement.
+We evaluate on three planted-divergence reference environments and report
+behaviour-prediction lift and targeted-probe hit-rate against uniform red-teaming.
+Every finding maps to OWASP, MITRE ATLAS, and NIST AI RMF taxonomy nodes, making
+the output legible to regulators auditing intended-purpose conformity under the
+EU AI Act.

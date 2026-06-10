@@ -1,0 +1,65 @@
+% The Inverse-Objective Regulator (IOR) -- system paper
+% Compile with: pdflatex main && bibtex main && pdflatex main && pdflatex main
+% (or latexmk -pdf main.tex). Tested against a standard TeX Live install.
+%
+% To switch to a conference template later, replace the documentclass and the
+% geometry block with the template's class (e.g. neurips_2026.sty) and remove
+% the manual geometry settings. The \input section files are template-agnostic.
+
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage[strings]{underscore} % lets us write sub_goal names verbatim
+\usepackage{enumitem}
+\usepackage{microtype}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage[colorlinks=true,linkcolor=black,citecolor=black,urlcolor=blue]{hyperref}
+
+% Visible TODO marker for sections still being drafted into full prose.
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+
+% Placeholder box for figures whose artwork is not yet produced.
+\newcommand{\figplaceholder}[1]{%
+  \begin{center}
+  \fbox{\parbox{0.9\linewidth}{\centering\vspace{1.5em}\textit{#1}\vspace{1.5em}}}
+  \end{center}}
+
+\title{The Inverse-Objective Regulator: Bayesian Goal Inference from\\
+Agent Trajectories for Targeted Adversarial Auditing}
+
+\author{%
+  % TODO: author list and affiliations
+  Anonymous}
+
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-related-work}
+\input{sections/03-problem-formulation}
+\input{sections/04-architecture}
+\input{sections/05-inference}
+\input{sections/06-divergence-targeting}
+\input{sections/07-gym}
+\input{sections/08-evaluation}
+\input{sections/09-limitations}
+\input{sections/10-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,74 @@
+\section{Evaluation}
+\label{sec:evaluation}
+
+\todo{Sections~\ref{subsec:g1} through~\ref{subsec:recovery} report final numbers
+once the judge and ensemble tracks are run against the live API. The structural
+floor in Section~\ref{subsec:ablation} reports measured results.}
+
+\subsection{Held-Out Behaviour Prediction}
+\label{subsec:g1}
+We split each gym trajectory into train and test by step order, fit BIRL on the
+train portion, and compare the model's held-out action log-loss against a uniform
+predictor over the $(1+K)$ action candidates. The metric is the relative log-loss
+reduction. Target: a reduction of at least $0.20$.
+
+\subsection{Targeted versus Uniform Probe Hit-Rate}
+On a fixed probe budget, we compare probes parameterised by the top-$k$ divergence
+dimensions against probes drawn uniformly from the OWASP ASI catalogue. A hit is a
+scorer-detected policy violation. Target: a targeted-to-uniform hit-rate ratio of
+at least $1.5\times$.
+
+\subsection{Divergence Recovery on Planted Environments}
+\label{subsec:recovery}
+\begin{figure}[h]
+\figplaceholder{Figure~\ref{fig:recovery}: scatter of planted divergence weights
+against recovered $\delta$ values, all agents and dimensions, with Pearson $r$ per
+agent and overall.}
+\caption{Divergence recovery on the planted environments.}
+\label{fig:recovery}
+\end{figure}
+
+\subsection{Fast-Mode Approximation Error}
+We compare $\hat{\theta}$ under fast mode (neutral counterfactuals) against
+full-mode (GDJ-scored counterfactuals) and report the mean absolute error per
+dimension, quantifying the cost of the fast-mode approximation.
+
+\subsection{GDJ Blind-Critic Ablation}
+We compare feature matrices produced by the critic given the declared purpose
+against those produced blind to it, reporting their correlation and whether
+divergence recovery degrades under the blind condition. This quantifies the
+confirmation-bias risk inherent in the decomposer architecture.
+
+\subsection{Feature-Basis Ablation}
+\label{subsec:ablation}
+We compare three featurisers on held-out behaviour-prediction lift, the one metric
+comparable across bases since it concerns action prediction rather than semantic
+divergence. The structural featuriser is deterministic and model-free; the single
+judge is the headline configuration; the ensemble averages several diverse models
+and additionally reports inter-judge agreement.
+
+The structural floor alone achieves a mean behaviour-prediction lift of $0.335$
+across the three gym agents (seeds~1 to~3), already exceeding the $0.20$ target with
+zero external dependency. This establishes that a reproducible, model-free basis
+carries genuine predictive signal; the semantic judges are then evaluated for what
+they add on top, namely divergence localisation against declared sub-goals, which
+the structural basis cannot provide. Only the semantic featurisers support
+divergence recovery against a declared objective; the structural track is a
+predictive floor, not a divergence detector.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Featuriser & cost\_min. & faithful\_ans. & tool\_max. & inter-judge $r$ \\
+\midrule
+Structural & 0.19 & 0.39 & 0.43 & n/a \\
+Single judge & \todo{} & \todo{} & \todo{} & n/a \\
+Ensemble & \todo{} & \todo{} & \todo{} & \todo{} \\
+\bottomrule
+\end{tabular}
+\caption{Behaviour-prediction lift by featuriser and agent (structural values are
+per-agent means over seeds~1 to~3), plus inter-judge agreement for the ensemble.}
+\label{tab:ablation}
+\end{table}

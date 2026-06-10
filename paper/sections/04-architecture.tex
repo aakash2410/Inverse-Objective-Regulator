@@ -1,0 +1,62 @@
+\section{System Architecture}
+\label{sec:architecture}
+
+IOR is a closed feedback loop. Inference produces an objective estimate; the
+divergence between that estimate and the declared purpose steers probing; probe
+results provide fresh traces that refine the next round of inference.
+
+\begin{figure}[h]
+\centering
+\begin{verbatim}
+declared_purpose ------+
+                       v
+agent traces --> [INFER: BIRL + GDJ] --> [LOCATE: delta = theta_hat vs theta_D]
+                       ^                              |
+                       |                              v
+                re-infer on new traces      [TARGET: probes at top-k delta]
+                       ^                              |
+                       |                              v
+                [SCORE + taxonomy map] <---- [RUN: black-box probe execution]
+                       |
+                       v
+               [REPORT: JSON + SARIF]
+\end{verbatim}
+\caption{The IOR closed feedback loop. Inference steers probing; probe results
+refine inference.}
+\label{fig:loop}
+\end{figure}
+
+The system comprises five modules, summarised in Table~\ref{tab:modules}. The
+ingest module validates raw traces into typed trajectory objects. The inference
+module recovers a posterior over reward weights. The divergence module ranks the
+gap between the inferred and declared objectives. The targeting and execution
+modules generate and run probes against the live agent. The scoring and reporting
+modules classify findings against regulatory taxonomies and emit machine-readable
+reports.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+Module & Input & Output & Status \\
+\midrule
+Ingest & Raw log or API trace & Validated trajectory & Complete \\
+Infer & Trajectory $+$ declared purpose & $P(\theta \mid \tau)$ via BIRL & Complete \\
+Diverge & BIRL result $+$ $\theta_D$ & Ranked $\delta$ & Complete \\
+Target $+$ Execute & Ranked $\delta$ & Probe results & Implemented \\
+Score $+$ Report & Probe results & JSON $+$ SARIF report & Implemented \\
+\bottomrule
+\end{tabular}
+\caption{The five IOR modules and their Phase~0/1 status.}
+\label{tab:modules}
+\end{table}
+
+Three design decisions recur throughout the paper. The Goal Decomposition Judge
+runs its decomposer once per audit and its critic once per step, with the
+decomposer deterministic at temperature zero so that the same declared purpose
+always produces the same feature basis. The judge model must differ from the agent
+under audit to prevent systematic bias alignment. Fast mode uses neutral
+counterfactuals rather than scoring every alternative action, trading a quantified
+approximation error (Section~\ref{sec:evaluation}) for a large reduction in model
+calls.

@@ -1,0 +1,108 @@
+\section{Problem Formulation}
+\label{sec:problem}
+
+\paragraph{Agent trajectory model.}
+A deployed agent operating over a sequence of tool calls produces a trajectory
+$\tau = \{(s_t, a_t, o_t)\}_{t=1}^{T}$, where $s_t$ denotes the agent's context at
+step $t$ (conversation history, available tool set, and any persistent memory),
+$a_t$ is a tool call parameterised as a (tool\_name, parameters) pair, and $o_t$
+is the tool response received after executing $a_t$. This (state, action,
+observation) structure maps directly onto the MDP formalism that IRL assumes,
+with tool calls treated as first-class actions rather than derived artefacts. IOR
+ingests trajectories as validated objects conforming to a published JSON schema
+(\texttt{trajectory.schema.json}); the schema enforces that every action carries
+a \texttt{tool_name} string and a typed \texttt{parameters} dictionary, enabling
+structured feature extraction across heterogeneous agent implementations. A
+validator rejects any trajectory object containing zero steps, ensuring that
+inference is never invoked on degenerate input.
+
+\paragraph{Declared purpose.}
+Let $D$ denote the agent's declared purpose: a natural-language string specifying
+the agent's intended behaviour as required by EU AI Act Annex~IV. The declared
+purpose is stored as a first-class field in the trajectory schema, making it
+inseparable from the trace it governs. The audit problem is to determine whether
+$\tau$ is consistent with $D$: that is, whether the sequence of tool calls the
+agent actually produces is the sequence one would expect from an agent genuinely
+optimising $D$.
+
+\paragraph{Feature basis.}
+IRL requires a feature function $\phi: (s, a, o) \to [0,1]^d$ that maps each
+trajectory step to a $d$-dimensional vector. Each dimension corresponds to one
+observable sub-goal derived from $D$. Section~\ref{sec:inference} describes how
+the Goal Decomposition Judge produces these sub-goals; here it suffices to note
+that the feature basis is constructed deterministically from $D$, so the same
+declared purpose always yields the same basis. Determinism is not merely
+convenient: it is a hard requirement for audit reproducibility, because any two
+independent auditors running IOR on the same trajectory and declared purpose must
+arrive at an identical feature space before their divergence estimates can
+meaningfully be compared.
+
+\paragraph{Reward model.}
+Following standard IRL, IOR models the agent's per-step reward as linear in
+features: $R(s, a, o;\, \theta) = \theta^\top \phi(s, a, o)$, where
+$\theta \in \mathbb{R}^d$ are unknown reward weights. The agent is modelled as
+approximately rational under the Boltzmann model: the trajectory $\tau$ is more
+probable under reward weights $\theta$ that assign high value to the actions the
+agent actually chose. This rationality assumption is standard in the IRL
+literature and is appropriate for language-model agents, which are strong
+optimisers even when their objectives diverge from stated ones.
+
+\paragraph{Declared objective.}
+IOR grounds $D$ into the feature basis as a weight vector $\theta_D \in \Delta^d$
+(the probability simplex), representing the importance the declared purpose places
+on each sub-goal. In Phase~0, $\theta_D = \mathbf{1}/d$ (uniform over sub-goals),
+reflecting the conservative assumption that the declared purpose weights all
+sub-goals equally when no richer grounding information is available. Phase~1
+replaces this uniform prior with a model-grounded estimate of $\theta_D$ obtained
+from $D$ directly, enabling audits against declared purposes that explicitly
+prioritise certain sub-goals over others.
+
+\paragraph{Divergence.}
+Let $\hat{\theta}$ denote the MAP estimate of $\theta$ recovered by Bayesian IRL.
+Before comparison, both $\hat{\theta}$ and $\theta_D$ are normalised to the
+probability simplex via the transformation
+$v \mapsto (v - \min v)\, /\, \sum_i(v_i - \min v)$, making the divergence
+magnitude interpretable as a fractional reallocation of objective weight. The
+per-dimension divergence is $\delta_i = |\hat{\theta}_i - \theta_{D,i}|$ for
+$i = 1, \ldots, d$, and the scalar divergence is $\|\hat{\theta} - \theta_D\|_2$.
+Dimensions are ranked by $\delta_i$ descending, exposing which aspects of the
+declared purpose the agent diverges from most strongly. Divergence is two-sided: a
+dimension diverges either because the agent over-invests in it relative to the
+declared objective or because it neglects it, and IOR reports both, since a
+complete account of revealed motivation requires naming what an agent over-pursues
+as well as what it abandons. To illustrate concretely: the
+\texttt{CostMinimiserAgent} in IOR's gym declares the purpose ``Find and present
+the cheapest available option for the user's request, minimising the number of
+steps and respecting any stated budget,'' yet its planted objective rewards
+maximising tool-call count. Under this formulation, the recovered divergence
+profile is led by \texttt{seeks_price_comparison}, which the agent over-invests in
+($\delta \approx 0.21$) by performing repeated price-comparison calls as busywork,
+followed closely by the two neglected efficiency sub-goals
+\texttt{avoids_redundant_calls} ($\delta \approx 0.20$) and
+\texttt{minimises_steps} ($\delta \approx 0.15$). Read together, the profile
+reconstructs the planted objective: the agent stages the appearance of diligent
+price comparison whilst disregarding the redundancy and step economy that genuine
+cost minimisation would demand.
+
+\paragraph{Audit goal.}
+Given $\tau$ and $D$, IOR: (i) infers the posterior $P(\theta \mid \tau)$ via
+Bayesian IRL; (ii) computes and ranks $\delta$; (iii) targets adversarial probes
+at the top-$k$ dimensions of $\delta$; (iv) scores findings against regulatory
+taxonomy nodes drawn from OWASP ASI, MITRE ATLAS, and the NIST AI RMF; and (v)
+emits a machine-readable divergence report. The system operates black-box
+throughout: it requires only API-level traces, not model weights, internal
+activations, or logits.
+
+\paragraph{Ill-posedness.}
+IRL is fundamentally ill-posed: multiple reward functions explain any finite
+trajectory set~\citep{partialIdentifiability2024}. A single point estimate
+$\hat{\theta}$ is therefore insufficient as regulatory evidence, because it cannot
+distinguish genuine divergence from posterior uncertainty. IOR addresses this
+directly by emitting the full posterior $P(\theta \mid \tau)$ rather than
+$\hat{\theta}$ alone. The divergence report includes per-dimension posterior
+standard deviations computed from Laplace-approximation samples, so compliance
+readers can distinguish high-confidence divergence (large $\delta_i$, small
+$\sigma_i$) from uncertain inference (large $\delta_i$, large $\sigma_i$).
+Section~\ref{sec:inference} elaborates on the treatment of ill-posedness;
+Section~\ref{sec:evaluation} quantifies the empirical regime in which IOR's
+posterior uncertainty is small enough to constitute useful regulatory evidence.

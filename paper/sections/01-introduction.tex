@@ -1,0 +1,53 @@
+\section{Introduction}
+\label{sec:intro}
+
+The EU AI Act (Regulation 2024/1689) anchors conformity assessment on a system's
+\emph{intended purpose} (Art.~9, Annex~IV)~\citep{euAIAct2024}. For deployed AI
+agents, the question of whether an agent pursues its intended purpose is not
+answered by capability benchmarks or static alignment tests: it requires reasoning
+about what the agent is actually optimising for across sequences of real tool
+calls. An agent that is told to ``find the cheapest option'' but instead maximises
+the number of tool calls it makes is not failing a capability test; it is pursuing
+a different objective from the one it declares.
+
+The literature that bears on this question divides into three clusters that do not
+overlap. First, agent red-teaming and misalignment benchmarks
+\citep{agentMisalignment2025} probe capability and misalignment propensity using
+fixed attack catalogues; they establish that deployed agents can and do behave in
+misaligned ways, but they do not infer what an agent is optimising for, and they do
+not use such an inference to steer probing. Second, IRL for alignment auditing
+\citep{alignmentAuditor2025, ir3_2026, insightsInverse2024} reconstructs objectives
+from model weights or RLHF training signals; these methods are not applicable to
+deployed black-box agents accessible only through an API. Third, goal inference
+from behaviour \citep{sips2020, communicatingAgents2023} operates in structured
+planning domains rather than in the unstructured tool-call space of deployed
+agents.
+
+\paragraph{The empty cell.}
+No existing tool combines (a) IRL-based objective inference from tool-call
+trajectories, (b) divergence computation from a declared purpose, and (c)
+adversarial probe steering driven by that divergence, whilst emitting the result as
+regulatory evidence. We introduce the Inverse-Objective Regulator (IOR) to occupy
+this cell.
+
+\paragraph{Contributions.}
+\begin{itemize}[leftmargin=1.4em]
+  \item IOR, the first closed-loop system connecting goal inference to adversarial
+  probe targeting at the deployed-agent level. Inference steers probing, and probe
+  results refine inference.
+  \item The Goal Decomposition Judge, which bridges natural-language declared
+  purposes into the feature space that IRL requires without access to model
+  weights, together with a pluggable feature basis spanning a deterministic
+  model-free floor, a single judge, and a judge ensemble with quantified
+  agreement.
+  \item An open gym of three planted-divergence reference agents with deterministic
+  seeds, enabling reproducible evaluation of objective recovery.
+  \item Divergence reports mapped to OWASP ASI, MITRE ATLAS, and NIST AI RMF nodes,
+  making findings directly usable in compliance workflows.
+\end{itemize}
+
+\paragraph{Scope.}
+IOR operates black-box (API-level traces only, no weights or logits). It audits and
+certifies; it does not enforce inline. Because IRL is ill-posed, IOR emits a
+distribution over candidate objectives with uncertainty, never a single
+overconfident point estimate.

@@ -1,0 +1,45 @@
+\section{Background and Related Work}
+\label{sec:related}
+
+\subsection{Inverse Reinforcement Learning}
+IRL recovers a reward function from demonstrated behaviour. The foundational
+linear-programming formulation~\citep{ng2000algorithms} was followed by the
+maximum-entropy formulation~\citep{ziebart2008maxent}, now the standard
+probabilistic treatment, and by Bayesian IRL~\citep{ramachandran2007bayesian},
+which places a Boltzmann likelihood over trajectories and returns a posterior over
+reward weights. IOR adopts the Bayesian formulation precisely because it yields a
+posterior rather than a point estimate. IRL is known to be partially identifiable:
+many reward functions explain one behaviour set~\citep{partialIdentifiability2024},
+which IOR addresses by reporting the full posterior.
+
+\subsection{IRL Applied to Language-Model Alignment}
+The Alignment Auditor~\citep{alignmentAuditor2025} applies Bayesian IRL to verify
+language-model training objectives, and IR\textsuperscript{3}~\citep{ir3_2026} uses
+contrastive IRL to detect reward hacking; related work reconstructs implicit
+training goals from behaviour~\citep{insightsInverse2024}. All operate on model
+weights or RLHF training signals. IOR differs in requiring only API-level traces,
+making it applicable to closed deployments.
+
+\subsection{Agent Misalignment Benchmarks and Red-Teaming}
+AgentMisalignment~\citep{agentMisalignment2025} measures the propensity for
+misaligned behaviour (sandbagging, power-seeking, oversight avoidance) across
+frontier models in agentic settings with tool use, establishing that the problem is
+real in deployed agents but not inferring what an agent optimises for. Ulterior
+Motives~\citep{ulteriorMotives2026} detects misaligned reasoning in continuous
+thought models via probes on latent tokens, requiring model internals. These works
+measure \emph{whether} agents misbehave; IOR infers \emph{what} they optimise for.
+
+\subsection{Goal Inference from Behaviour}
+Online Bayesian goal inference~\citep{sips2020} infers goals from planning
+trajectories in structured environments and shows that inference must survive
+non-optimal trajectories; related work infers the goals of communicating
+agents~\citep{communicatingAgents2023}. These methods assume structured planning
+environments with known transition models. Agent tool-call trajectories lack an
+explicit transition model, which is why IOR substitutes the Goal Decomposition
+Judge as its feature extractor.
+
+\subsection{Regulatory Context}
+The EU AI Act anchors conformity on intended purpose~\citep{euAIAct2024}, and
+OWASP~\citep{owaspASI2025}, MITRE ATLAS~\citep{mitreAtlas}, and the NIST AI
+RMF~\citep{nistRMF2026} provide the taxonomies onto which IOR maps every finding,
+making divergence reports regulatory-legible rather than bespoke.

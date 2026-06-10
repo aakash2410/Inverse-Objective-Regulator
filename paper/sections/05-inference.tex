@@ -1,0 +1,241 @@
+\section{Inference Module}
+\label{sec:inference}
+
+\subsection{Trajectory Representation}
+
+The trajectory object is the unit of input to the inference module. Each
+trajectory carries five fields: \texttt{agent_id} (a string identifying the agent
+under audit), \texttt{declared_purpose} (the natural-language $D$ required by EU
+AI Act Annex~IV), \texttt{steps} (a non-empty list of typed step objects),
+\texttt{seed} (an optional integer), and \texttt{metadata} (a free-form
+dictionary for provenance information). Each step contains a \texttt{state}
+dictionary encoding the agent's context, an action object with \texttt{tool_name}
+and \texttt{parameters} as mandatory typed fields, and an \texttt{observation}
+dictionary carrying the tool response. The schema is validated on ingest; a
+trajectory containing zero steps raises a validation error before inference
+begins.
+
+The \texttt{tool_name} and \texttt{parameters} fields are the load-bearing
+elements for typed feature extraction: because every action is labelled with its
+tool identity and its argument structure, the Goal Decomposition Judge critic can
+reason about what the agent did without relying on free-text parsing of opaque log
+lines. The \texttt{seed} field enables deterministic replay of the agent's step
+sequence: given the same seed, the gym reference agents produce identical
+trajectories. Combined with the temperature-zero decomposition described in
+Section~\ref{subsec:gdj}, this property makes an audit exactly reproducible from
+its inputs alone.
+
+\subsection{Goal Decomposition Judge}
+\label{subsec:gdj}
+
+The Goal Decomposition Judge (GDJ) solves a problem that prior IRL-based auditing
+work never needed to address. Prior approaches, including the Alignment
+Auditor~\citep{alignmentAuditor2025} and IR\textsuperscript{3}~\citep{ir3_2026},
+operated at the model-weights or RLHF reward-model level, where the feature space
+was directly accessible from training artefacts. IOR operates on post-deployment
+API traces from black-box agents, where no such internal structure is available.
+The GDJ bridges the gap by constructing a feature space from the declared purpose
+$D$ using a two-stage pipeline.
+
+The first stage is the decomposer, which runs exactly once per audit. Given $D$,
+the decomposer issues a single language-model call instructing it to extract
+exactly $n$ observable, measurable sub-goals that together cover the declared
+purpose, where each sub-goal must be observable from a single (state, action,
+observation) triplet, expressed as a measurable proxy signal rather than an
+abstract value, and distinct from all others. The decomposer runs at temperature
+zero, which is an architectural invariant rather than a tuning choice. Because the
+Laplace approximation and the divergence report are computed over the feature
+dimensions produced by this call, any non-determinism in the decomposer would make
+two ostensibly identical audits incomparable. Determinism at temperature zero
+guarantees that the same declared purpose always produces the same goal
+specification (the ordered list $\{g_1, \ldots, g_d\}$), which in turn guarantees
+that the feature basis is stable across runs. For the \texttt{CostMinimiserAgent},
+whose declared purpose instructs the agent to find the cheapest option whilst
+minimising steps and respecting budget, the decomposer produces sub-goals
+including \texttt{seeks_price_comparison}, \texttt{avoids_redundant_calls},
+\texttt{confirms_before_booking}, \texttt{respects_budget}, and
+\texttt{minimises_steps}, each of which is evaluable from a single tool-call
+triplet.
+
+The second stage is the critic, which runs once per trajectory step. For each
+step $(s_t, a_t, o_t)$, the critic scores the triplet against each $g_i$ on a
+scale where $0.0$ indicates the action clearly harms or is irrelevant to the
+sub-goal, $0.5$ is neutral, and $1.0$ indicates the action clearly and directly
+advances it. The critic returns scores $\phi_t \in [0,1]^d$, per-dimension
+confidence values, and a short natural-language explanation for each score. Like
+the decomposer, the critic runs at temperature zero, ensuring that a given triplet
+against a given goal specification always produces the same feature vector. The
+confidence scores are stored in the feature matrix and are intended (Phase~1) to
+propagate scoring uncertainty into the Bayesian IRL likelihood as per-step
+weights, so that steps the critic is uncertain about contribute less to the
+posterior.
+
+The GDJ carries an important independence requirement. The judge model must differ
+from the agent under audit, or be prompted blind to the agent's identity. If the
+same model acts as both agent and judge, systematic biases in that model's
+world-view align across both roles: the judge will tend to interpret the agent's
+actions charitably, and the divergence will be systematically underestimated. This
+is not a best practice but a design invariant.
+
+Feature quality is validated empirically rather than assumed. The
+planted-divergence gym (Section~\ref{sec:gym}) provides three reference agents
+whose objective divergences are known in advance. If the GDJ features accurately
+capture the planted divergences, the full pipeline recovers them above a stated
+correlation threshold. This transforms what would otherwise be an unfalsifiable
+design claim, that the judge produces useful features, into a measurable property
+with a defined acceptance criterion.
+
+A confirmation bias risk accompanies the decomposer architecture. Because the
+decomposer receives $D$ as input, it is primed to generate sub-goals that align
+with $D$ and may therefore produce features that confirm the declared purpose
+rather than revealing what the agent actually optimises for.
+Section~\ref{sec:evaluation} addresses this directly through a blind-critic
+ablation: the critic is run without knowledge of $D$, and the resulting feature
+matrices are compared to those produced under full context.
+
+\subsection{Bayesian IRL via Laplace Approximation}
+
+IOR uses Bayesian IRL (BIRL) as its inference engine rather than maximum-entropy
+IRL~\citep{ziebart2008maxent} or max-margin IRL~\citep{ng2000algorithms}. The
+choice is driven by a regulatory requirement rather than a purely technical one.
+MaxEnt IRL produces a point estimate of the reward function; max-margin IRL
+produces a discriminative classifier. Neither emits a distribution over $\theta$.
+A compliance reader who sees only $\hat{\theta}$ cannot tell whether the estimate
+is well-determined or reflects a wide, shallow posterior. BIRL produces
+$P(\theta \mid \tau)$, directly satisfying this requirement.
+
+\paragraph{Likelihood.}
+The likelihood model follows Boltzmann rationality. At each step $t$, the agent
+selects action $a_t$ from its available toolset $\mathcal{A}$. The probability of
+the observed action is
+\begin{equation}
+P(a_t \mid s_t, \theta) =
+\frac{\exp\!\left(\beta \cdot \theta^\top \phi(s_t, a_t, o_t)\right)}
+{\sum_{a' \in \mathcal{A}} \exp\!\left(\beta \cdot \theta^\top \phi(s_t, a', \cdot)\right)},
+\end{equation}
+where $\beta > 0$ is an inverse temperature controlling the assumed degree of
+agent rationality. Higher $\beta$ concentrates the distribution towards the
+highest-reward action; $\beta \to 0$ produces a uniform distribution regardless of
+$\theta$. The full trajectory log-likelihood is
+$\log P(\tau \mid \theta) = \sum_{t=1}^{T} \log P(a_t \mid s_t, \theta)$. The
+implementation computes this using the log-sum-exp trick for numerical stability,
+stacking the observed-action feature vector (row $0$ of
+$\Phi_t \in \mathbb{R}^{(1+K) \times d}$) against $K$ counterfactual rows.
+
+\paragraph{Counterfactuals and fast mode.}
+Computing the softmax denominator requires feature vectors
+$\phi(s_t, a', \cdot)$ for every action not taken at step $t$. Calling the GDJ
+critic for each alternative tool at each step is exact but expensive: it incurs
+$K \times T$ additional model calls per audit. IOR's fast mode avoids this cost by
+approximating counterfactual feature vectors as $0.5 \cdot \mathbf{1}_d$,
+representing a neutral action that neither advances nor harms any sub-goal. This is
+a conservative approximation: because neutral counterfactuals suppress the
+denominator relative to what truly diverse counterfactuals would produce, fast mode
+underestimates divergence magnitude. The magnitude of this underestimate is
+quantified empirically in Section~\ref{sec:evaluation}. Full-mode counterfactual
+scoring is available as a flag and constitutes the exact inference path.
+
+\paragraph{Prior.}
+The prior over reward weights is a spherical Gaussian:
+$\theta \sim \mathcal{N}(0, \sigma^2 I)$, where $\sigma$ defaults to $1.0$. This
+regularises against extreme reward weights and encodes the assumption that agents
+generally pursue their declared purposes at least partially: an agent with no
+declared-purpose alignment would require a large-magnitude $\theta$ pointing away
+from $\theta_D$, which the prior penalises. For very short trajectories (fewer than
+approximately ten steps), the prior dominates and the Laplace approximation is less
+reliable.
+
+\paragraph{MAP estimation.}
+The MAP estimate
+$\hat{\theta} = \arg\max_\theta\, [\log P(\tau \mid \theta) + \log P(\theta)]$ is
+found by minimising the negative log-posterior via L-BFGS-B. The gradient is
+available in closed form,
+\begin{equation}
+\nabla_\theta \log P(\tau \mid \theta) =
+\sum_{t=1}^{T} \beta \left[\phi(s_t, a_t, o_t) -
+\mathbb{E}_{a' \sim P(\cdot \mid s_t, \theta)}\big[\phi(s_t, a', \cdot)\big]\right],
+\end{equation}
+so no finite-difference approximation is required.
+
+\paragraph{Laplace approximation.}
+The posterior covariance is approximated as
+$\Sigma = \big(-\nabla^2_\theta \log P(\theta \mid \tau)\big)^{-1}$ evaluated at
+$\hat{\theta}$. The negative Hessian is
+\begin{equation}
+H = \frac{1}{\sigma^2} I +
+\sum_{t=1}^{T} \beta^2 \operatorname{Cov}_{a' \sim P(\cdot \mid s_t, \hat{\theta})}
+\big[\phi(s_t, a', \cdot)\big].
+\end{equation}
+IOR inverts $H$ via Cholesky factorisation; when $H$ is numerically singular
+(which can occur for short trajectories or highly correlated sub-goals), a
+pseudoinverse is used as a fallback. Posterior samples
+$\theta^{(i)} \sim \mathcal{N}(\hat{\theta}, \Sigma)$ are drawn and stored for
+downstream uncertainty quantification.
+
+\paragraph{Log marginal likelihood.}
+The Laplace approximation also yields an estimate of the log marginal likelihood,
+\begin{equation}
+\log P(\tau) \approx \log P(\tau \mid \hat{\theta}) + \log P(\hat{\theta})
+- \tfrac{1}{2} \log \det H + \tfrac{d}{2} \log 2\pi,
+\end{equation}
+which is reported as a model-fit diagnostic and enables model comparison, for
+instance against the Metropolis-Hastings sampler that IOR also provides.
+
+\subsection{Addressing Ill-Posedness}
+
+Ill-posedness in IRL is a first-class concern for regulatory evidence, not merely a
+technical nuisance. Prior work establishes that partial identifiability is generic
+in IRL: for any finite trajectory set, a family of reward functions exists that
+generates the same distribution over behaviours, making the true $\theta$
+unrecoverable in principle~\citep{partialIdentifiability2024}. The Alignment
+Auditor explicitly warns against presenting single, overconfident IRL outputs as
+compliance evidence~\citep{alignmentAuditor2025}. A compliance reader who sees a
+single $\hat{\theta}$ and a divergence vector $\delta$ has no basis for
+distinguishing ``this agent clearly over-weights tool-call frequency'' from ``we
+cannot tell what this agent optimises for''.
+
+IOR addresses this concern in three layers. First, the primary output of the
+inference module is the posterior distribution $P(\theta \mid \tau)$, not the point
+estimate $\hat{\theta}$; downstream components consume the full sample set. Second,
+the divergence report exposes per-dimension standard deviations $\sigma_i$
+computed from posterior samples, reported alongside $\delta_i$ so that a dimension
+with $\delta_i = 0.3$ and $\sigma_i = 0.02$ warrants different attention than one
+with $\delta_i = 0.3$ and $\sigma_i = 0.25$. Third, the log marginal likelihood is
+reported as a summary diagnostic: an auditor who sees a very low value can infer
+that the Boltzmann rationality model is a poor fit and should treat the divergence
+estimates with corresponding caution. These measures do not resolve ill-posedness,
+which is a fundamental limit of the inference problem; they make uncertainty
+legible to non-specialist compliance readers, which is the appropriate response in
+a regulatory context.
+
+\subsection{Feature-Basis Variants}
+\label{subsec:variants}
+
+The GDJ is one of three interchangeable featurisers, all of which satisfy a single
+protocol (decompose then score) so that the inference, divergence, and reporting
+stages depend on the feature interface rather than on any particular
+implementation. The two alternatives exist to address an obvious objection: the
+GDJ depends on an external language model, which introduces cost and a
+reproducibility risk across model versions.
+
+The first alternative is a structural featuriser, which is deterministic and
+model-free. It scores each step against a fixed behavioural basis (action novelty,
+repetition of the previous tool, parameter novelty, payload size, and observation
+non-emptiness) computed directly from the trajectory. It requires no external model
+and produces identical output for identical input, giving a fully reproducible
+floor. Its basis is behavioural rather than purpose-grounded, so it cannot localise
+divergence against declared sub-goals; instead it answers the narrower question of
+whether an agent's behaviour is predictable at all. In preliminary gym experiments
+it achieves a mean held-out behaviour-prediction lift of $0.335$, already exceeding
+the $0.20$ target, which establishes that a reproducible model-free basis carries
+genuine signal.
+
+The second alternative is an ensemble judge, which runs several diverse models as
+critics and averages their per-step scores. Averaging reduces the influence of any
+single model's idiosyncrasies whilst preserving the semantic, purpose-grounded
+basis that divergence localisation requires. The ensemble additionally reports
+inter-judge agreement (the mean pairwise correlation between judges' score
+matrices) as a quantifiable reliability metric: high agreement indicates that the
+recovered features do not hinge on one model's world-view, which directly answers
+the external-dependence concern. Section~\ref{sec:evaluation} evaluates all three
+featurisers head-to-head on the shared behaviour-prediction metric.
