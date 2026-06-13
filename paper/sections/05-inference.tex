@@ -138,13 +138,15 @@ available as a flag and constitutes the exact inference path. The fast-mode
 approximation also has a consequence for what BIRL contributes: with a flat neutral
 reference, the MAP estimate $\hat{\theta}_i$ rises roughly monotonically in
 $(\bar{\phi}_i - 0.5)$, where $\bar{\phi}_i$ is the mean critic score on dimension
-$i$, so the \emph{ranking} of the fast-mode point estimate is close to that of a
+$i$, so the \emph{ranking} of the fast-mode point estimate is related to that of a
 centred column-mean of the critic scores. We measure this directly in
-Section~\ref{sec:evaluation} and find the two rankings highly correlated. The
-distinctive value of Bayesian IRL therefore lies not in the point estimate under
-fast mode but in the two things a column-mean cannot provide: the posterior
-uncertainty $\sigma_i$ and the full-mode counterfactual treatment, in which the
-reference is the agent's actual alternatives rather than a flat $0.5$.
+Section~\ref{sec:evaluation} and find the two rankings moderately correlated
+(Spearman $0.77$ on a deterministic basis) but frequently disagreeing on the single
+most-divergent dimension, so the IRL point estimate is not merely a relabelled mean.
+Even so, the strongest claims for Bayesian IRL rest on two things a column-mean
+cannot provide at all: the posterior uncertainty $\sigma_i$ and the full-mode
+counterfactual treatment, in which the reference is the agent's actual alternatives
+rather than a flat $0.5$.
 
 \paragraph{Prior.}
 The prior over reward weights is a spherical Gaussian:

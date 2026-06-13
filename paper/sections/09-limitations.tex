@@ -15,8 +15,8 @@ and \texttt{minimises_steps}; an agent whose true objective were genuinely
 orthogonal to cost minimisation would evade detection. The blind-critic ablation
 (Section~\ref{sec:evaluation}) tests only critic-side bias and does not address this
 upstream blindness. Mitigations worth exploring include seeding the basis with
-anti-goals and adversarially proposed off-purpose dimensions, but no choice of $D$
--derived basis can be complete, and IOR should be presented as detecting divergence
+anti-goals and adversarially proposed off-purpose dimensions, but no
+purpose-derived basis can be complete, and IOR should be presented as detecting divergence
 \emph{relative to a declared purpose}, not as a general objective recovery method.
 
 \paragraph{The closed loop is designed but not yet demonstrated.}
@@ -72,13 +72,15 @@ model judgement, and a defensible compliance artefact would need that mapping
 specified and validated rather than delegated to a model.
 
 \paragraph{Normalisation choice.}
-The divergence computation maps reward weights to the probability simplex via
-$v \mapsto (v - \min v)/\sum_i(v_i - \min v)$ and then takes an $L_2$ distance. The
-min-subtraction forces the lowest-weighted dimension to exactly zero, which can
-inflate its apparent divergence, and an $L_2$ distance between two simplex points is
-defensible but not the only natural choice. A softmax projection and a
-total-variation or KL distance are plausible alternatives, and the sensitivity of
-the divergence profile to this choice is not yet characterised.
+The divergence computation maps reward weights to the probability simplex by a
+softmax and takes the total variation distance, having found that an earlier
+min-subtraction normalisation forced the lowest-weighted dimension to exactly zero
+and inflated its apparent divergence. The choice is not innocuous: the
+IRL-versus-mean comparison of Section~\ref{sec:evaluation} shifts materially between
+the two projections (Spearman $0.77$ under softmax against $0.91$ under
+min-subtraction), so divergence conclusions carry a dependence on the projection
+that we have characterised only partially. A KL distance is a further natural
+alternative whose effect we have not measured.
 
 \paragraph{Regulatory evidentiary weight.}
 Whether ``inferred objective versus intended purpose'' carries evidentiary weight

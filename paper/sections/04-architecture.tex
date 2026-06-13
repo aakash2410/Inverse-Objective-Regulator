@@ -1,9 +1,13 @@
 \section{System Architecture}
 \label{sec:architecture}
 
-IOR is a closed feedback loop. Inference produces an objective estimate; the
-divergence between that estimate and the declared purpose steers probing; probe
-results provide fresh traces that refine the next round of inference.
+IOR is designed as a closed feedback loop. Inference produces an objective estimate;
+the divergence between that estimate and the declared purpose steers probing; probe
+results provide fresh traces that refine the next round of inference. We describe the
+loop as the intended architecture and implement each of its stages, but the present
+evaluation exercises the stages individually rather than iterating the full loop;
+Section~\ref{sec:limitations} states what closing it would require and the
+confirmation-amplifier risk it must control for.
 
 \begin{figure}[h]
 \centering

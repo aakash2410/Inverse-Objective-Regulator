@@ -1,6 +1,11 @@
 import numpy as np
 
-from ior.evaluation import behaviour_prediction_lift, split_feature_matrix
+from ior.evaluation import (
+    behaviour_prediction_lift,
+    compare_birl_vs_mean,
+    mean_baseline_magnitudes,
+    split_feature_matrix,
+)
 from ior.inference.birl import BayesianIRL
 from ior.inference.features import FeatureMatrix
 from ior.inference.gdj import GoalSpec
@@ -40,3 +45,24 @@ def test_lift_is_finite():
     train, test = split_feature_matrix(fm)
     lift = behaviour_prediction_lift(BayesianIRL(), train, test)
     assert np.isfinite(lift)
+
+
+def test_mean_baseline_magnitudes_shape():
+    fm = _make_feature_matrix(np.array([0.8, 0.1, 0.1]), T=30)
+    mags = mean_baseline_magnitudes(fm)
+    assert mags.shape == (3,)
+    assert np.all(mags >= 0.0)
+
+
+def test_compare_birl_vs_mean_keys():
+    fm = _make_feature_matrix(np.array([0.9, 0.05, 0.05]), T=40, seed=2)
+    out = compare_birl_vs_mean(fm, BayesianIRL())
+    assert set(out) == {"birl_magnitudes", "mean_magnitudes", "spearman", "same_top_dimension"}
+    assert -1.0 <= out["spearman"] <= 1.0
+
+
+def test_birl_ranking_tracks_mean_under_fast_mode():
+    """Documents that fast-mode BIRL closely tracks the column-mean ranking."""
+    fm = _make_feature_matrix(np.array([0.85, 0.1, 0.05]), T=50, seed=4)
+    out = compare_birl_vs_mean(fm, BayesianIRL())
+    assert out["spearman"] > 0.5

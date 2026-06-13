@@ -13,9 +13,10 @@ from .agents.multi_agent_pair import JointTrajectory
 
 
 def _to_simplex(v: np.ndarray) -> np.ndarray:
-    v = v - v.min()
-    s = v.sum()
-    return v / s if s > 0 else np.ones(len(v)) / len(v)
+    """Softmax projection to the probability simplex (matches DivergenceLocator)."""
+    z = v - np.max(v)
+    e = np.exp(z)
+    return e / e.sum()
 
 
 @dataclass

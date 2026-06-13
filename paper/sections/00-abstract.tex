@@ -16,12 +16,13 @@ language-model judge, and a judge ensemble with quantified inter-judge agreement
 We describe the full audit protocol and contribute an open gym of three
 planted-divergence reference environments for evaluating it. As an initial result,
 a deterministic model-free feature basis predicts held-out agent behaviour with a
-mean log-loss reduction of $0.335$ over a uniform baseline, and we show that under
-the fast-mode approximation the Bayesian IRL divergence ranking is largely
-reproducible by a simple column-mean of the judge scores (Spearman $0.913$),
-which locates the method's distinctive value in uncertainty quantification and
-full-mode counterfactual reasoning rather than in the point estimate. The targeted
-probing, divergence-recovery, and closed-loop evaluations are specified as
-protocols; their measurement is ongoing. Findings are designed to map onto OWASP,
+mean log-loss reduction of $0.335$ over a uniform baseline. A column-mean ablation
+probes what the Bayesian IRL adds beyond an LLM judge: on a deterministic basis the
+IRL divergence ranking is correlated with but not reducible to the mean (Spearman
+$0.77$, top-dimension agreement $33\%$), the comparison is itself sensitive to the
+simplex normalisation, and BIRL additionally supplies the posterior uncertainty and
+full-mode counterfactual reasoning that a mean cannot. The targeted probing,
+divergence-recovery, and closed-loop evaluations are specified as protocols; their
+measurement is ongoing. Findings are designed to map onto OWASP,
 MITRE ATLAS, and NIST AI RMF taxonomy nodes so that output is legible to regulators
 auditing intended-purpose conformity under the EU AI Act.

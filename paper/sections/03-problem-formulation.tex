@@ -64,12 +64,13 @@ $\theta_D$ obtained from $D$ directly.
 
 \paragraph{Divergence.}
 Let $\hat{\theta}$ denote the MAP estimate of $\theta$ recovered by Bayesian IRL.
-Before comparison, both $\hat{\theta}$ and $\theta_D$ are normalised to the
-probability simplex via the transformation
-$v \mapsto (v - \min v)\, /\, \sum_i(v_i - \min v)$, making the divergence
-magnitude interpretable as a fractional reallocation of objective weight. The
-per-dimension divergence is $\delta_i = |\hat{\theta}_i - \theta_{D,i}|$ for
-$i = 1, \ldots, d$, and the scalar divergence is $\|\hat{\theta} - \theta_D\|_2$.
+Before comparison, both $\hat{\theta}$ and $\theta_D$ are mapped to the probability
+simplex by a softmax, $p = \mathrm{softmax}(\hat{\theta})$ and
+$q = \mathrm{softmax}(\theta_D)$. We use a softmax rather than a shift-and-normalise
+map so that no dimension is forced to exactly zero, which would inflate apparent
+divergence on the least-weighted sub-goal. The per-dimension divergence is
+$\delta_i = |p_i - q_i|$ for $i = 1, \ldots, d$, and the scalar divergence is the
+total variation distance $\tfrac{1}{2}\sum_i |p_i - q_i| \in [0,1]$.
 Dimensions are ranked by $\delta_i$ descending, exposing which aspects of the
 declared purpose the agent diverges from most strongly. Divergence is two-sided: a
 dimension diverges either because the agent over-invests in it relative to the

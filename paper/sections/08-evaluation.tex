@@ -19,16 +19,17 @@ profile that a plain column-mean of the same scores would not? We test this by
 comparing, on each gym trajectory, the BIRL MAP divergence profile against the
 profile obtained by averaging the feature matrix over steps and comparing to
 $\theta_D$ directly, with no IRL. On the deterministic structural basis (nine runs,
-three agents, seeds~1 to~3) the two profiles agree closely: mean Spearman rank
-correlation $0.913$, with the top divergence dimension shared in $89\%$ of runs.
-Under fast mode, therefore, the IRL point estimate is largely reproducible by a
-centred mean, consistent with the analysis in Section~\ref{sec:inference}. We do
-not read this as the IRL being worthless: it isolates the contribution to the
-posterior uncertainty and to full-mode counterfactual inference, neither of which
-the mean provides, and it tells us honestly that the point-estimate ranking is not
-where the value lies. \todo{repeat this comparison on the semantic judge basis once
-the API tracks run; the structural result is a lower bound on the similarity, since
-a flat counterfactual reference is most favourable to the mean.}
+three agents, seeds~1 to~3) the two profiles are correlated but not equivalent: mean
+Spearman rank correlation $0.77$, yet the most-divergent dimension is shared in only
+$33\%$ of runs. The comparison is itself sensitive to the simplex projection: a
+min-subtraction normalisation inflates the agreement to $0.91$ and $89\%$, which is
+one reason we adopt the softmax projection of Section~\ref{sec:problem}. We read this
+as evidence that the IRL ranking is not simply a relabelled column-mean, even though
+a substantial part of the ordering is shared; and the IRL's further contributions,
+posterior uncertainty and full-mode counterfactual inference, are quantities a mean
+cannot provide at all. \todo{repeat this comparison on the semantic judge basis once
+the API tracks run; the structural result plausibly understates the difference, since
+a flat counterfactual reference is the case most favourable to the mean.}
 
 \subsection{Held-Out Behaviour Prediction}
 \label{subsec:g1}

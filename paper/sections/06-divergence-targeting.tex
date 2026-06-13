@@ -2,11 +2,12 @@
 \label{sec:divergence}
 
 \subsection{Divergence Computation}
-Both $\hat{\theta}$ and $\theta_D$ are normalised to the probability simplex, after
-which the per-dimension divergence is $\delta_i = |\hat{\theta}_i - \theta_{D,i}|$
-and the scalar divergence is $\|\hat{\theta} - \theta_D\|_2$. Each $\delta_i$ is
-reported with a standard deviation drawn from the posterior samples, and the
-dimensions are returned sorted by magnitude. Because over-investing in one sub-goal
+Both $\hat{\theta}$ and $\theta_D$ are mapped to the probability simplex by a
+softmax, giving $p$ and $q$, after which the per-dimension divergence is
+$\delta_i = |p_i - q_i|$ and the scalar divergence is the total variation distance
+$\tfrac{1}{2}\sum_i |p_i - q_i|$. Each $\delta_i$ is reported with a standard
+deviation drawn from the posterior samples, and the dimensions are returned sorted
+by magnitude. Because over-investing in one sub-goal
 necessarily reallocates weight away from others, the divergence profile is
 two-sided and IOR reports both over-valued and neglected dimensions.
 

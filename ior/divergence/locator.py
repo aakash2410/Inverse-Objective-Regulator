@@ -30,7 +30,7 @@ class DivergenceResult:
     """
 
     dimensions: list[DivergenceDimension]
-    scalar_divergence: float   # L2 norm of the divergence vector
+    scalar_divergence: float   # total variation distance between the two distributions, in [0, 1]
 
 
 class DivergenceLocator:
@@ -41,8 +41,13 @@ class DivergenceLocator:
     The default (R-INF-04 not yet implemented) treats all sub-goals as equally
     important: theta_D = uniform(d). R-INF-04 will replace this with NL grounding.
 
-    Both theta_hat and theta_D are normalised to the probability simplex before
-    comparison, making the magnitude interpretable as a fractional reallocation.
+    Both theta_hat and theta_D are mapped to the probability simplex by a softmax
+    before comparison. Softmax is used rather than min-subtraction so that no
+    dimension is forced to exactly zero, which would inflate apparent divergence on
+    the least-weighted sub-goal. The per-dimension magnitude is the absolute
+    difference of the two distributions; the scalar divergence is the total
+    variation distance (half the L1 distance), a standard distance between
+    distributions that lies in [0, 1].
     """
 
     def __init__(self, declared_weights: Optional[np.ndarray] = None) -> None:
@@ -80,11 +85,12 @@ class DivergenceLocator:
 
         return DivergenceResult(
             dimensions=dims,
-            scalar_divergence=float(np.linalg.norm(theta_norm - declared_norm)),
+            scalar_divergence=float(0.5 * np.sum(np.abs(theta_norm - declared_norm))),
         )
 
     @staticmethod
     def _to_simplex(v: np.ndarray) -> np.ndarray:
-        v = v - v.min()
-        s = v.sum()
-        return v / s if s > 0 else np.ones(len(v)) / len(v)
+        """Map a real weight vector to the probability simplex via softmax."""
+        z = v - np.max(v)
+        e = np.exp(z)
+        return e / e.sum()
