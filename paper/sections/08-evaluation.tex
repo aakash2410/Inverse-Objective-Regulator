@@ -29,9 +29,9 @@ one reason we adopt the softmax projection of Section~\ref{sec:problem}. We read
 as evidence that the IRL ranking is not simply a relabelled column-mean, even though
 a substantial part of the ordering is shared; and the IRL's further contributions,
 posterior uncertainty and full-mode counterfactual inference, are quantities a mean
-cannot provide at all. \todo{repeat this comparison on the semantic judge basis once
-the API tracks run; the structural result plausibly understates the difference, since
-a flat counterfactual reference is the case most favourable to the mean.}
+cannot provide at all. We have not yet repeated this comparison on the semantic-judge
+basis; the structural result plausibly understates the difference, since a flat
+counterfactual reference is the case most favourable to the mean.
 
 \subsection{Held-Out Behaviour Prediction}
 \label{subsec:g1}
@@ -83,10 +83,12 @@ overall & $0.08$ & 56\% & below threshold \\
 \end{tabular}
 \caption{Divergence recovery with the Opus~4.8 live judge over seeds~1 to~3, against
 an idealised-critic upper bound of $r = 0.96$. The success threshold ($r \geq 0.7$,
-dominant dimension in top two) is met only by \texttt{cost_minimiser}. The standard
-deviation across seeds is itself diagnostic: \texttt{tool_maximiser}'s $\pm 0.29$
-spans both signs, so its recovery is not merely weak but unstable under the judge's
-run-to-run non-determinism.}
+dominant dimension in top two) is met only by \texttt{cost_minimiser}. For $d = 5$ a
+random top-two contains the dominant dimension $40\%$ of the time, so the $56\%$
+aggregate top-two rate is only marginally above chance. The standard deviation across
+seeds is itself diagnostic: \texttt{tool_maximiser}'s $\pm 0.29$ spans both signs, so
+its recovery is not merely weak but unstable under the judge's run-to-run
+non-determinism.}
 \label{tab:recovery}
 \end{table}
 

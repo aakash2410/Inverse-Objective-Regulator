@@ -16,6 +16,7 @@
 \usepackage{amsfonts}
 \usepackage{booktabs}
 \usepackage{tikz}
+\usetikzlibrary{positioning, arrows.meta}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
 \usepackage{array}
@@ -28,21 +29,10 @@
 \usepackage[numbers,sort&compress]{natbib}
 \usepackage[colorlinks=true,linkcolor=black,citecolor=black,urlcolor=blue]{hyperref}
 
-% Visible TODO marker for sections still being drafted into full prose.
-\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
-
-% Placeholder box for figures whose artwork is not yet produced.
-\newcommand{\figplaceholder}[1]{%
-  \begin{center}
-  \fbox{\parbox{0.9\linewidth}{\centering\vspace{1.5em}\textit{#1}\vspace{1.5em}}}
-  \end{center}}
-
 \title{The Inverse-Objective Regulator: Bayesian Goal Inference from\\
 Agent Trajectories for Targeted Adversarial Auditing}
 
-\author{%
-  % TODO: author list and affiliations
-  Aakash Sangani}
+\author{Aakash Sangani}
 
 \date{}
 

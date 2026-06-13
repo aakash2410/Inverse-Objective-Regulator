@@ -11,22 +11,37 @@ confirmation-amplifier risk it must control for.
 
 \begin{figure}[h]
 \centering
-\begin{verbatim}
-declared_purpose ------+
-                       v
-agent traces --> [INFER: BIRL + GDJ] --> [LOCATE: delta = theta_hat vs theta_D]
-                       ^                              |
-                       |                              v
-                re-infer on new traces      [TARGET: probes at top-k delta]
-                       ^                              |
-                       |                              v
-                [SCORE + taxonomy map] <---- [RUN: black-box probe execution]
-                       |
-                       v
-               [REPORT: JSON + SARIF]
-\end{verbatim}
-\caption{The IOR closed feedback loop. Inference steers probing; probe results
-refine inference.}
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[
+  font=\small, >=stealth,
+  box/.style={draw, rounded corners, align=center, text width=2.5cm,
+              minimum height=1cm, inner sep=3pt},
+  io/.style={align=center},
+]
+% top row
+\node[io]  (dp)     at (-3.5,0) {declared\\purpose};
+\node[box] (infer)  at (0,0)    {Infer\\(BIRL + GDJ)};
+\node[box] (locate) at (3.7,0)  {Locate\\$\delta = \hat{\theta}$ vs $\theta_D$};
+\node[box] (target) at (7.4,0)  {Target\\probes at top-$k\,\delta$};
+% bottom row (right to left)
+\node[box] (run)    at (7.4,-2.4) {Run\\black-box probes};
+\node[box] (score)  at (3.7,-2.4) {Score +\\taxonomy};
+\node[box] (report) at (0,-2.4)   {Report\\(JSON + SARIF)};
+
+\draw[->] (dp) -- (infer);
+\draw[->] (infer) -- (locate);
+\draw[->] (locate) -- (target);
+\draw[->] (target) -- (run);
+\draw[->] (run) -- (score);
+\draw[->] (score) -- (report);
+\draw[->, dashed] (run.north) to[out=90, in=90, looseness=0.7]
+  node[pos=0.5, above, font=\scriptsize] {re-infer on new traces} (infer.north);
+\end{tikzpicture}%
+}
+\caption{The IOR closed feedback loop. The solid path runs from the declared purpose
+through inference, divergence location, probe targeting, execution, scoring, and
+reporting. The dashed arc is the proposed feedback (re-inferring on probe-generated
+traces); the present evaluation exercises the solid path only.}
 \label{fig:loop}
 \end{figure}
 
