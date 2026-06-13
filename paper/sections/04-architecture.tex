@@ -58,8 +58,10 @@ Score $+$ Report & Probe results & JSON $+$ SARIF report & Implemented \\
 
 Three design decisions recur throughout the paper. The Goal Decomposition Judge
 runs its decomposer once per audit and its critic once per step, with the
-decomposer deterministic at temperature zero so that the same declared purpose
-always produces the same feature basis. The judge model must differ from the agent
+decomposition fixed for the duration of an audit so that the same declared purpose
+produces the same feature basis (enforced by pinning or caching the goal
+specification, since newer models deprecate the temperature parameter that earlier
+guaranteed this). The judge model must differ from the agent
 under audit to prevent systematic bias alignment. Fast mode uses neutral
 counterfactuals rather than scoring every alternative action, trading a quantified
 approximation error (Section~\ref{sec:evaluation}) for a large reduction in model

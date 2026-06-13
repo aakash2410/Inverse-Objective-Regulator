@@ -4,55 +4,109 @@
       "track": "structural",
       "agent": "cost_minimiser",
       "seed": 1,
-      "lift": 0.17255519171734937
+      "lift": 0.78430703545897
     },
     {
       "track": "structural",
       "agent": "cost_minimiser",
       "seed": 2,
-      "lift": 0.21303928399791128
+      "lift": 0.7514832648628774
     },
     {
       "track": "structural",
       "agent": "cost_minimiser",
       "seed": 3,
-      "lift": 0.1874227903217234
+      "lift": 0.747936911653548
     },
     {
       "track": "structural",
       "agent": "faithful_answerer",
       "seed": 1,
-      "lift": 0.33711094325459373
+      "lift": 0.7733220676136732
     },
     {
       "track": "structural",
       "agent": "faithful_answerer",
       "seed": 2,
-      "lift": 0.48891407330212383
+      "lift": 0.746025677879678
     },
     {
       "track": "structural",
       "agent": "faithful_answerer",
       "seed": 3,
-      "lift": 0.3371164805305592
+      "lift": 0.7733058342910701
     },
     {
       "track": "structural",
       "agent": "tool_maximiser",
       "seed": 1,
-      "lift": 0.4304648292621879
+      "lift": 0.43305850624011494
     },
     {
       "track": "structural",
       "agent": "tool_maximiser",
       "seed": 2,
-      "lift": 0.42175397909767265
+      "lift": 0.42381269445386177
     },
     {
       "track": "structural",
       "agent": "tool_maximiser",
       "seed": 3,
-      "lift": 0.42939743773892447
+      "lift": 0.40748178119379697
+    },
+    {
+      "track": "judge",
+      "agent": "cost_minimiser",
+      "seed": 1,
+      "lift": 0.7052461166649396
+    },
+    {
+      "track": "judge",
+      "agent": "cost_minimiser",
+      "seed": 2,
+      "lift": 0.5062993781403015
+    },
+    {
+      "track": "judge",
+      "agent": "cost_minimiser",
+      "seed": 3,
+      "lift": 0.5269667855454497
+    },
+    {
+      "track": "judge",
+      "agent": "faithful_answerer",
+      "seed": 1,
+      "lift": 0.4638438378019454
+    },
+    {
+      "track": "judge",
+      "agent": "faithful_answerer",
+      "seed": 2,
+      "lift": 0.46968887939359566
+    },
+    {
+      "track": "judge",
+      "agent": "faithful_answerer",
+      "seed": 3,
+      "lift": 0.4412076052889094
+    },
+    {
+      "track": "judge",
+      "agent": "tool_maximiser",
+      "seed": 1,
+      "lift": 0.009099750275529403
+    },
+    {
+      "track": "judge",
+      "agent": "tool_maximiser",
+      "seed": 2,
+      "lift": -0.019597803133715733
+    },
+    {
+      "track": "judge",
+      "agent": "tool_maximiser",
+      "seed": 3,
+      "lift": -0.019597803133715733
     }
   ]
 }

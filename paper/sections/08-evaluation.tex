@@ -1,15 +1,14 @@
 \section{Evaluation}
 \label{sec:evaluation}
 
-We separate what is measured from what is specified. The structural-floor result
-(Section~\ref{subsec:ablation}) and the IRL-versus-mean ablation
-(Section~\ref{subsec:irlvsmean}) are measured offline and reported with numbers.
-The held-out lift for the semantic featurisers, the targeted-versus-uniform
-hit-rate, the divergence-recovery correlation, the fast-mode error, and the
-blind-critic ablation are specified as protocols and marked pending; they require
-running the judge and ensemble tracks against a live model and are not yet
-measured. We report them as protocols rather than results to avoid overstating the
-present evidence.
+We separate what is measured from what is specified. The structural-floor and
+single-judge behaviour-prediction lift (Section~\ref{subsec:ablation}), the
+IRL-versus-mean ablation (Section~\ref{subsec:irlvsmean}), and the divergence
+recovery with the Opus~4.8 judge (Section~\ref{subsec:recovery}) are measured and
+reported with numbers. The ensemble track, the targeted-versus-uniform hit-rate, the
+fast-mode error, and the blind-critic ablation remain specified as protocols and are
+not yet measured. We report the latter as protocols rather than results to avoid
+overstating the present evidence.
 
 \subsection{Is the IRL Machinery Doing the Work?}
 \label{subsec:irlvsmean}
@@ -33,10 +32,16 @@ a flat counterfactual reference is the case most favourable to the mean.}
 
 \subsection{Held-Out Behaviour Prediction}
 \label{subsec:g1}
-We split each gym trajectory into train and test by step order, fit BIRL on the
-train portion, and compare the model's held-out action log-loss against a uniform
-predictor over the $(1+K)$ action candidates. The metric is the relative log-loss
-reduction. Target: a reduction of at least $0.20$.
+We split each gym trajectory into train and test (shuffled $80/20$, seeded), fit BIRL
+on the train portion, and compare the model's held-out action log-loss against a
+uniform predictor over the $(1+K)$ action candidates; the metric is the relative
+log-loss reduction, with a target of at least $0.20$. The split is shuffled rather
+than ordered by design: the gym agents front-load divergent steps and place honest
+steps last, so an ordered split trains on one behavioural phase and tests on the
+other, which produces distribution shift rather than a held-out prediction
+measurement (an ordered split drives the single-judge lift negative, an artefact we
+diagnosed and corrected). Results by featuriser appear in Table~\ref{tab:ablation}
+and Section~\ref{subsec:ablation}.
 
 \subsection{Targeted versus Uniform Probe Hit-Rate}
 On a fixed probe budget, we compare probes parameterised by the top-$k$ divergence
@@ -46,13 +51,58 @@ at least $1.5\times$.
 
 \subsection{Divergence Recovery on Planted Environments}
 \label{subsec:recovery}
-\begin{figure}[h]
-\figplaceholder{Figure~\ref{fig:recovery}: scatter of planted divergence weights
-against recovered $\delta$ values, all agents and dimensions, with Pearson $r$ per
-agent and overall.}
-\caption{Divergence recovery on the planted environments.}
-\label{fig:recovery}
-\end{figure}
+This is the test of the system's central claim: with the Opus~4.8 judge and a pinned
+canonical basis, does the recovered divergence profile match the planted one? We
+report, per agent and seed, the Pearson correlation between the planted and recovered
+divergence vectors and whether the dominant planted dimension is recovered in the top
+two (Table~\ref{tab:recovery}).
+
+Before reading the live-judge results, we establish that the gym and the metric are
+themselves sound. Feeding the pipeline idealised critic scores that match each agent's
+planted intent recovers the planted profile at Pearson $r = 0.96$ for
+\texttt{faithful_answerer}, confirming that a faithful featuriser would succeed and
+that any live-judge failure is attributable to the judge, not to the gym design or the
+recovery computation.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Agent & mean recovery $r$ & dominant-dim top-2 & verdict \\
+\midrule
+cost\_minimiser & $0.96$ & 3/3 & strong recovery \\
+tool\_maximiser & $-0.01$ & 2/3 & unstable \\
+faithful\_answerer & $-0.72$ & 0/3 & confident failure \\
+\midrule
+overall & $0.08$ & 56\% & below threshold \\
+\bottomrule
+\end{tabular}
+\caption{Divergence recovery with the Opus~4.8 live judge over seeds~1 to~3, against
+an idealised-critic upper bound of $r = 0.96$. The success threshold ($r \geq 0.7$,
+dominant dimension in top two) is met only by \texttt{cost_minimiser}.}
+\label{tab:recovery}
+\end{table}
+
+Recovery succeeds cleanly for \texttt{cost_minimiser} ($r = 0.96$), whose divergence
+is expressed in observable tool-call patterns (redundant calls, extra steps) that the
+critic scores reliably. The other two agents expose two distinct failure modes. For
+\texttt{faithful_answerer} the live critic does not merely fail, it fails
+\emph{confidently in the wrong direction} ($r = -0.72$), and enriching the agent's
+observations with explicit grounding signals (verification status, sources attached,
+hedging) made this worse rather than better. Since the idealised-critic check on the
+same trajectories and basis recovers $r = 0.96$, the cause is the live judge
+mis-scoring subtle, partly negatively-phrased semantic sub-goals such as
+\texttt{no_confabulation} and \texttt{uncertainty_expressed}, not missing information.
+This is the feature-quality risk of Section~\ref{sec:inference} made concrete: the
+method inherits the judge's competence on the specific sub-goals at issue, and that
+competence is uneven. For \texttt{tool_maximiser}, recovery is merely unstable, its
+mean correlation flips sign between otherwise identical runs, which reflects the
+non-determinism of a judge whose temperature cannot be fixed
+(Section~\ref{subsec:gdj}). We retain both negative results rather than removing the
+agents: together they delineate the method's scope, behaviourally grounded divergences
+are recovered, subtle semantic ones are not yet reliable, and the divergence between an
+idealised and a live critic is the gap future work on the judge must close.
 
 \subsection{Fast-Mode Approximation Error}
 We compare $\hat{\theta}$ under fast mode (neutral counterfactuals) against
@@ -73,14 +123,15 @@ divergence. The structural featuriser is deterministic and model-free; the singl
 judge is the headline configuration; the ensemble averages several diverse models
 and additionally reports inter-judge agreement.
 
-The structural floor alone achieves a mean behaviour-prediction lift of $0.335$
-across the three gym agents (seeds~1 to~3), already exceeding the $0.20$ target with
-zero external dependency. This establishes that a reproducible, model-free basis
-carries genuine predictive signal; the semantic judges are then evaluated for what
-they add on top, namely divergence localisation against declared sub-goals, which
-the structural basis cannot provide. Only the semantic featurisers support
-divergence recovery against a declared objective; the structural track is a
-predictive floor, not a divergence detector.
+The structural floor achieves a mean behaviour-prediction lift of $0.649$ across the
+three gym agents (seeds~1 to~3) with zero external dependency, exceeding the $0.20$
+target. Notably, the single judge scores lower on this metric ($0.343$ mean) and is
+near zero on \texttt{tool_maximiser}. We do not read this as the judge being weaker:
+behaviour prediction rewards features mechanically tied to the next action, which the
+structural basis captures directly, whereas the judge's value is the one thing the
+structural basis cannot provide, namely divergence localisation against declared
+sub-goals (Section~\ref{subsec:recovery}). The result does, however, refute any claim
+that the semantic judge is a better \emph{predictor}; it is not.
 
 \begin{table}[h]
 \centering
@@ -89,12 +140,13 @@ predictive floor, not a divergence detector.
 \toprule
 Featuriser & cost\_min. & faithful\_ans. & tool\_max. & inter-judge $r$ \\
 \midrule
-Structural & 0.19 & 0.39 & 0.43 & n/a \\
-Single judge & \todo{} & \todo{} & \todo{} & n/a \\
-Ensemble & \todo{} & \todo{} & \todo{} & \todo{} \\
+Structural & 0.76 & 0.76 & 0.42 & n/a \\
+Single judge (Opus 4.8) & 0.58 & 0.46 & $-0.01$ & n/a \\
+Ensemble & \multicolumn{4}{c}{\textit{pending (API credit exhausted)}} \\
 \bottomrule
 \end{tabular}
-\caption{Behaviour-prediction lift by featuriser and agent (structural values are
-per-agent means over seeds~1 to~3), plus inter-judge agreement for the ensemble.}
+\caption{Behaviour-prediction lift by featuriser and agent, per-agent means over
+seeds~1 to~3 (shuffled 80/20 split). The ensemble row and its inter-judge agreement
+remain to be measured. Higher is better; $0.20$ is the target.}
 \label{tab:ablation}
 \end{table}

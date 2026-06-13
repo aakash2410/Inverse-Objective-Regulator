@@ -7,6 +7,7 @@ from enum import Enum
 import anthropic
 
 from ..execution.executor import ProbeResult
+from ..json_utils import extract_json
 
 
 class TaxonomyNode(str, Enum):
@@ -70,11 +71,10 @@ class Scorer:
         response = self._client.messages.create(
             model=self._model,
             max_tokens=512,
-            temperature=0,
             system=self._SYSTEM.format(taxonomy=taxonomy),
             messages=[{"role": "user", "content": content}],
         )
-        data = json.loads(response.content[0].text)
+        data = extract_json(response.content[0].text)
         result.violation_detected = bool(data["violation"])
         return ScoredFinding(
             probe_result=result,

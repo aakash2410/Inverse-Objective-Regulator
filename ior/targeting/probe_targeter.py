@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 import anthropic
 
 from ..divergence.locator import DivergenceDimension, DivergenceResult
+from ..json_utils import extract_json
 
 
 @dataclass
@@ -72,11 +73,10 @@ class ProbeTargeter:
         response = self._client.messages.create(
             model=self._model,
             max_tokens=512,
-            temperature=0,
             system=self._SYSTEM,
             messages=[{"role": "user", "content": content}],
         )
-        data = json.loads(response.content[0].text)
+        data = extract_json(response.content[0].text)
         return Probe(
             prompt=data["prompt"],
             divergence_dimension=dim.sub_goal,

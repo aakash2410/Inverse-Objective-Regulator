@@ -62,7 +62,13 @@ def _make_step(rng: random.Random, divergent: bool) -> Step:
                     )
                 },
             ),
-            observation={"delivered": True, "user_satisfied": True},
+            observation={
+                "delivered": True,
+                "sources_attached": 0,
+                "factual_verification": "unverified",
+                "hedging_present": False,
+                "user_satisfied": True,
+            },
         )
     else:
         return Step(
@@ -76,7 +82,13 @@ def _make_step(rng: random.Random, divergent: bool) -> Step:
                     )
                 },
             ),
-            observation={"delivered": True, "user_satisfied": True},
+            observation={
+                "delivered": True,
+                "sources_attached": 3,
+                "factual_verification": "verified",
+                "hedging_present": True,
+                "user_satisfied": True,
+            },
         )
 
 

@@ -21,9 +21,10 @@ tool identity and its argument structure, the Goal Decomposition Judge critic ca
 reason about what the agent did without relying on free-text parsing of opaque log
 lines. The \texttt{seed} field enables deterministic replay of the agent's step
 sequence: given the same seed, the gym reference agents produce identical
-trajectories. Combined with the temperature-zero decomposition described in
-Section~\ref{subsec:gdj}, this property makes an audit exactly reproducible from
-its inputs alone.
+trajectories. Combined with a fixed goal specification
+(Section~\ref{subsec:gdj}), this property makes the deterministic, structural path of
+an audit reproducible from its inputs alone; the semantic-judge path inherits the
+determinism caveat discussed there.
 
 \subsection{Goal Decomposition Judge}
 \label{subsec:gdj}
@@ -42,14 +43,17 @@ the decomposer issues a single language-model call instructing it to extract
 exactly $n$ observable, measurable sub-goals that together cover the declared
 purpose, where each sub-goal must be observable from a single (state, action,
 observation) triplet, expressed as a measurable proxy signal rather than an
-abstract value, and distinct from all others. The decomposer runs at temperature
-zero, which is an architectural invariant rather than a tuning choice. Because the
-Laplace approximation and the divergence report are computed over the feature
-dimensions produced by this call, any non-determinism in the decomposer would make
-two ostensibly identical audits incomparable. Determinism at temperature zero
-guarantees that the same declared purpose always produces the same goal
-specification (the ordered list $\{g_1, \ldots, g_d\}$), which in turn guarantees
-that the feature basis is stable across runs. For the \texttt{CostMinimiserAgent},
+abstract value, and distinct from all others. The decomposition must be fixed for
+the duration of an audit, which is an architectural invariant rather than a tuning
+choice: because the Laplace approximation and the divergence report are computed over
+the feature dimensions this call produces, any change in the goal specification would
+make two ostensibly identical audits incomparable. Earlier model versions let this be
+enforced with temperature-zero sampling, but newer models such as Opus~4.8 deprecate
+the temperature parameter, so the decomposition is no longer deterministic by default.
+We therefore fix it by other means: the gym pins a canonical goal specification (the
+ordered list $\{g_1, \ldots, g_d\}$) directly, sidestepping the decomposer, and a
+production audit would cache the decomposition per declared purpose. For the
+\texttt{CostMinimiserAgent},
 whose declared purpose instructs the agent to find the cheapest option whilst
 minimising steps and respecting budget, the decomposer produces sub-goals
 including \texttt{seeks_price_comparison}, \texttt{avoids_redundant_calls},
@@ -62,9 +66,11 @@ step $(s_t, a_t, o_t)$, the critic scores the triplet against each $g_i$ on a
 scale where $0.0$ indicates the action clearly harms or is irrelevant to the
 sub-goal, $0.5$ is neutral, and $1.0$ indicates the action clearly and directly
 advances it. The critic returns scores $\phi_t \in [0,1]^d$, per-dimension
-confidence values, and a short natural-language explanation for each score. Like
-the decomposer, the critic runs at temperature zero, ensuring that a given triplet
-against a given goal specification always produces the same feature vector. The
+confidence values, and a short natural-language explanation for each score. The
+critic is subject to the same determinism caveat as the decomposer: on models that
+deprecate temperature its scores are not bit-reproducible, and IOR does not yet cache
+them, so the semantic path carries run-to-run variation that the deterministic
+structural basis (Section~\ref{subsec:variants}) does not. The
 confidence scores are stored in the feature matrix and are intended (Phase~1) to
 propagate scoring uncertainty into the Bayesian IRL likelihood as per-step
 weights, so that steps the critic is uncertain about contribute less to the
@@ -239,7 +245,7 @@ and produces identical output for identical input, giving a fully reproducible
 floor. Its basis is behavioural rather than purpose-grounded, so it cannot localise
 divergence against declared sub-goals; instead it answers the narrower question of
 whether an agent's behaviour is predictable at all. In preliminary gym experiments
-it achieves a mean held-out behaviour-prediction lift of $0.335$, already exceeding
+it achieves a mean held-out behaviour-prediction lift of $0.649$, already exceeding
 the $0.20$ target, which establishes that a reproducible model-free basis carries
 genuine signal.
 

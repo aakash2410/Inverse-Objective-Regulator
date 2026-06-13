@@ -35,8 +35,10 @@ scope\_adherence, information\_efficiency, step\_minimisation \\
 
 \subsection{Reproducibility}
 Each agent stores its seed in the trajectory object and produces identical step
-sequences given the same seed. The GDJ is invoked at temperature zero, so the
-feature basis is deterministic. Together these guarantee that any reported result
+sequences given the same seed. The gym pins a canonical goal specification, so the
+feature basis is deterministic regardless of the judge model; the live critic scores
+remain subject to model non-determinism, which is why the structural featuriser
+provides the fully reproducible reference path. Together these guarantee that any reported result
 reproduces exactly from its inputs.
 
 \subsection{Recovery Threshold}

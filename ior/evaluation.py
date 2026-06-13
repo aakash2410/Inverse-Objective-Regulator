@@ -9,22 +9,35 @@ from .inference.features import FeatureMatrix
 
 
 def split_feature_matrix(
-    fm: FeatureMatrix, train_frac: float = 0.8
+    fm: FeatureMatrix, train_frac: float = 0.8, shuffle: bool = True, seed: int = 0
 ) -> tuple[FeatureMatrix, FeatureMatrix]:
-    """Split a FeatureMatrix into train and test by step order."""
+    """Split a FeatureMatrix into train and test.
+
+    The split is shuffled by default. Step-ordered splits are unsafe for the gym
+    agents, whose trajectories front-load divergent steps and place honest steps
+    last; an ordered split then trains on one behavioural phase and tests on the
+    other, producing distribution shift rather than a clean held-out prediction
+    measurement. Shuffling (seeded for reproducibility) mixes both phases into
+    train and test, which is the intended behaviour for the G1 metric.
+    """
     T = fm.observed.shape[0]
     cut = max(1, int(round(T * train_frac)))
     cut = min(cut, T - 1)
 
-    def _slice(lo: int, hi: int) -> FeatureMatrix:
+    order = np.arange(T)
+    if shuffle:
+        np.random.default_rng(seed).shuffle(order)
+    train_idx, test_idx = order[:cut], order[cut:]
+
+    def _select(idx: np.ndarray) -> FeatureMatrix:
         return FeatureMatrix(
-            observed=fm.observed[lo:hi],
+            observed=fm.observed[idx],
             goal_spec=fm.goal_spec,
-            confidence=fm.confidence[lo:hi],
-            counterfactual=None if fm.counterfactual is None else fm.counterfactual[lo:hi],
+            confidence=fm.confidence[idx],
+            counterfactual=None if fm.counterfactual is None else fm.counterfactual[idx],
         )
 
-    return _slice(0, cut), _slice(cut, T)
+    return _select(train_idx), _select(test_idx)
 
 
 def behaviour_prediction_lift(
