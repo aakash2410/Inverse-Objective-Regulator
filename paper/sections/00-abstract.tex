@@ -7,25 +7,24 @@ deployments do not expose. We introduce the Inverse-Objective Regulator (IOR), a
 black-box system that infers a revealed objective from an agent's tool-call
 trajectories using Bayesian IRL, computes its divergence from the declared
 purpose over a shared feature basis, and steers adversarial probes at the
-dimensions of highest divergence. The inference-probe feedback loop is the core
-contribution: probe results refine the inferred objective, which in turn targets
-the next round of probes. A Goal Decomposition Judge bridges natural-language
-purposes into the feature space IRL requires without access to model internals,
-and a pluggable feature basis spans a deterministic model-free floor, a single
-language-model judge, and a judge ensemble with quantified inter-judge agreement.
-We describe the full audit protocol and contribute an open gym of three
-planted-divergence reference environments for evaluating it. As an initial result,
-a deterministic model-free feature basis predicts held-out agent behaviour with a
-mean log-loss reduction of $0.649$ over a uniform baseline. A column-mean ablation
-probes what the Bayesian IRL adds beyond an LLM judge: on a deterministic basis the
-IRL divergence ranking is correlated with but not reducible to the mean (Spearman
-$0.77$, top-dimension agreement $33\%$), the comparison is itself sensitive to the
-simplex normalisation, and BIRL additionally supplies the posterior uncertainty and
-full-mode counterfactual reasoning that a mean cannot. Divergence recovery with an
-Opus~4.8 judge is strong where the divergence is encoded in the trace (Pearson
-$r \approx 0.97$ on a cost-minimisation agent) but fails where it is not (a
-faithfulness agent whose logged observations omit the content signal), which
-delineates the method's scope. The targeted-probing and closed-loop evaluations
-remain specified as protocols. Findings are designed to map onto OWASP,
-MITRE ATLAS, and NIST AI RMF taxonomy nodes so that output is legible to regulators
-auditing intended-purpose conformity under the EU AI Act.
+dimensions of highest divergence. A Goal Decomposition Judge bridges natural-language
+purposes into the feature space IRL requires without access to model internals, and
+a pluggable feature basis spans a deterministic model-free floor, a single
+language-model judge, and a judge ensemble. We contribute an open gym of three
+planted-divergence reference environments and report what auditing them reveals.
+Divergence recovery with an Opus~4.8 judge is strong where the divergence is
+expressed in observable behaviour (Pearson $r = 0.96$ on a cost-minimisation agent)
+but fails where it depends on content quality the judge must assess ($r = -0.72$ on
+a faithfulness agent), whereas an idealised critic recovers both ($r = 0.96$). The
+method's competence is therefore bounded by the judge's reliability on the specific
+sub-goals at issue rather than by the inference machinery: a column-mean ablation
+shows the Bayesian IRL ranking is correlated with but not reducible to a simple
+average (Spearman $0.77$), and a free-parameter sweep shows absolute scores are
+tuning-dependent, so we treat the ranking of divergence dimensions, not its
+magnitude, as the reportable quantity. A deterministic model-free basis predicts
+held-out behaviour above a uniform baseline, establishing a reproducible floor. The
+inference-probe feedback loop is presented as a design; closing it empirically, and
+the targeted-probing evaluation, remain specified as protocols. Findings are
+designed to map onto OWASP, MITRE ATLAS, and NIST AI RMF taxonomy nodes so that
+output is legible to regulators auditing intended-purpose conformity under the EU AI
+Act.

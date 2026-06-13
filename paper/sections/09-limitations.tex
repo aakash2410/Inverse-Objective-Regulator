@@ -19,6 +19,25 @@ anti-goals and adversarially proposed off-purpose dimensions, but no
 purpose-derived basis can be complete, and IOR should be presented as detecting divergence
 \emph{relative to a declared purpose}, not as a general objective recovery method.
 
+\paragraph{The bottleneck is judge reliability, not the inference machinery.}
+Our own evidence locates the method's centre of gravity in the language-model judge
+rather than in the Bayesian IRL. The idealised-critic check recovers the planted
+divergence at $r = 0.96$ on the same trajectories where the live judge reaches
+$-0.72$ (Section~\ref{subsec:recovery}), so the binding constraint is whether a
+language model can reliably score the specific sub-goals at issue. This places IOR
+squarely within the study of LLM-as-judge reliability and its documented failure
+modes, including verbosity, position, and self-enhancement
+bias~\citep{zheng2023judge, llmJudgeSurvey2024}, a literature the method depends on
+and which bounds it. Two consequences follow for any use as regulatory evidence.
+First, a confident wrong-direction failure ($r = -0.72$) is more dangerous than
+abstention: a tool that mis-localises divergence points an auditor at the wrong
+behaviour, so calibrated abstention on low-confidence sub-goals is a prerequisite we
+do not yet provide. Second, our evidence base is three hand-authored agents with a
+single clear success, which is too small and too self-authored to support general
+claims; the gym must grow to many agents spanning divergence types, ideally authored
+independently of the featuriser, before recovery on behavioural divergences can be
+claimed as a property of the method rather than of one example.
+
 \paragraph{The closed loop is designed but not yet demonstrated.}
 We describe the inference-probe feedback loop as the architectural contribution, but
 we have not yet run an experiment that closes it: the present evaluation compares
@@ -60,11 +79,11 @@ tool.
 
 \paragraph{Unvalidated posterior quality and an unspecified taxonomy mapping.}
 Two narrower gaps bear on the regulatory-legibility claim. First, the Laplace
-approximation underlying the reported uncertainties $\sigma_i$ is never checked
-against the Metropolis-Hastings sampler IOR also provides, so the calibration of
-the very quantities we offer as compliance evidence is currently unvalidated; a
-Laplace-versus-MH comparison on the gym is required before the $\sigma_i$ are
-trustworthy. Second, the claim that every finding maps onto an OWASP, MITRE ATLAS,
+approximation underlying the reported uncertainties $\sigma_i$ has now been checked
+against the Metropolis-Hastings sampler (Section~\ref{subsec:calibration}) and is
+mildly conservative (within $20\%$), but only on the deterministic structural basis;
+its calibration on the live-judge path, where scoring is itself non-deterministic,
+remains unvalidated. Second, the claim that every finding maps onto an OWASP, MITRE ATLAS,
 or NIST node is at present realised by a language-model classifier in the scorer
 that assigns a taxonomy node and severity to each probe finding; the mapping from a
 divergence dimension to a taxonomy node is not a fixed, audited correspondence but a

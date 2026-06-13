@@ -3,9 +3,12 @@
 
 We separate what is measured from what is specified. The structural-floor and
 single-judge behaviour-prediction lift (Section~\ref{subsec:ablation}), the
-IRL-versus-mean ablation (Section~\ref{subsec:irlvsmean}), and the divergence
-recovery with the Opus~4.8 judge (Section~\ref{subsec:recovery}) are measured and
-reported with numbers. The ensemble track, the targeted-versus-uniform hit-rate, the
+IRL-versus-mean ablation (Section~\ref{subsec:irlvsmean}), the divergence recovery
+with the Opus~4.8 judge (Section~\ref{subsec:recovery}), the Laplace-versus-MCMC
+calibration check (Section~\ref{subsec:calibration}), and the $\beta$/$\sigma$
+sensitivity sweep (Section~\ref{subsec:sensitivity}) are measured and reported with
+numbers, the last three of which use the offline structural or MCMC paths and so need
+no API access. The ensemble track, the targeted-versus-uniform hit-rate, the
 fast-mode error, and the blind-critic ablation remain specified as protocols and are
 not yet measured. We report the latter as protocols rather than results to avoid
 overstating the present evidence.
@@ -69,18 +72,21 @@ recovery computation.
 \small
 \begin{tabular}{@{}lccc@{}}
 \toprule
-Agent & mean recovery $r$ & dominant-dim top-2 & verdict \\
+Agent & recovery $r$ (mean $\pm$ sd) & dominant-dim top-2 & verdict \\
 \midrule
-cost\_minimiser & $0.96$ & 3/3 & strong recovery \\
-tool\_maximiser & $-0.01$ & 2/3 & unstable \\
-faithful\_answerer & $-0.72$ & 0/3 & confident failure \\
+cost\_minimiser & $0.96 \pm 0.01$ & 3/3 & strong recovery \\
+tool\_maximiser & $-0.01 \pm 0.29$ & 2/3 & unstable \\
+faithful\_answerer & $-0.72 \pm 0.19$ & 0/3 & confident failure \\
 \midrule
 overall & $0.08$ & 56\% & below threshold \\
 \bottomrule
 \end{tabular}
 \caption{Divergence recovery with the Opus~4.8 live judge over seeds~1 to~3, against
 an idealised-critic upper bound of $r = 0.96$. The success threshold ($r \geq 0.7$,
-dominant dimension in top two) is met only by \texttt{cost_minimiser}.}
+dominant dimension in top two) is met only by \texttt{cost_minimiser}. The standard
+deviation across seeds is itself diagnostic: \texttt{tool_maximiser}'s $\pm 0.29$
+spans both signs, so its recovery is not merely weak but unstable under the judge's
+run-to-run non-determinism.}
 \label{tab:recovery}
 \end{table}
 
@@ -104,10 +110,104 @@ agents: together they delineate the method's scope, behaviourally grounded diver
 are recovered, subtle semantic ones are not yet reliable, and the divergence between an
 idealised and a live critic is the gap future work on the judge must close.
 
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.85\linewidth, height=4.8cm,
+  ybar, ymin=-1.05, ymax=1.05,
+  bar width=20pt,
+  ylabel={recovery $r$ (mean $\pm$ s.d.)},
+  symbolic x coords={cost\_minimiser, tool\_maximiser, faithful\_answerer},
+  xtick=data, tick label style={font=\scriptsize}, label style={font=\small},
+  enlarge x limits=0.25,
+  extra y ticks={0.7,0.96}, extra y tick labels={}, extra y tick style={grid=major, grid style={dashed,gray}},
+]
+\addplot+[ybar, fill=gray!45, draw=black,
+  error bars/.cd, y dir=both, y explicit]
+coordinates {
+  (cost\_minimiser,0.96) +- (0,0.01)
+  (tool\_maximiser,-0.01) +- (0,0.29)
+  (faithful\_answerer,-0.72) +- (0,0.19)
+};
+\end{axis}
+\end{tikzpicture}
+\caption{Live-judge divergence recovery by agent (Opus~4.8, seeds~1 to~3). Dashed
+lines mark the success threshold ($r = 0.7$) and the idealised-critic upper bound
+($r = 0.96$). \texttt{cost_minimiser} reaches the upper bound with negligible
+variance; \texttt{tool_maximiser}'s error bar spans both signs; \texttt{faithful_answerer}
+is confidently negative.}
+\label{fig:recovery}
+\end{figure}
+
+\subsection{Posterior Calibration: Laplace versus MCMC}
+\label{subsec:calibration}
+The posterior standard deviations $\sigma_i$ are IOR's headline justification for
+choosing Bayesian IRL, so their quality must be checked rather than assumed. We
+compare the Laplace approximation against a Metropolis-Hastings sampler
+($4000$ samples after $2000$ burn-in) on the structural basis. The Laplace MAP and
+the MH posterior mean agree closely (Pearson $r = 0.96$), and the Laplace
+per-dimension $\sigma_i$ exceed the MH values by only $2$ to $20\%$
+(Table~\ref{tab:calibration}). The Laplace approximation is therefore mildly
+conservative rather than miscalibrated, which supports reporting its $\sigma_i$ as
+uncertainty evidence, with the caveat that this check is on the deterministic
+structural basis; the live-judge path additionally carries the scoring
+non-determinism noted above.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+dimension & 1 & 2 & 3 & 4 & 5 \\
+\midrule
+Laplace $\sigma$ & 0.85 & 0.84 & 0.92 & 0.99 & 0.83 \\
+MH $\sigma$ & 0.77 & 0.76 & 0.79 & 0.82 & 0.82 \\
+ratio & 1.11 & 1.10 & 1.17 & 1.20 & 1.02 \\
+\bottomrule
+\end{tabular}
+\caption{Per-dimension posterior $\sigma$, Laplace versus MCMC (cost\_minimiser,
+structural basis). Laplace is conservative by at most $20\%$.}
+\label{tab:calibration}
+\end{table}
+
+\subsection{Sensitivity to the Free Parameters $\beta$ and $\sigma$}
+\label{subsec:sensitivity}
+The inverse temperature $\beta$ and prior width $\sigma$ scale the likelihood and
+the prior directly, and for a tool offered as regulatory evidence their influence
+must be reported. Sweeping both on the structural basis (Table~\ref{tab:sensitivity})
+shows the behaviour-prediction lift is \emph{strongly} parameter-dependent, ranging
+from $0.12$ to $0.98$ across the grid. The single number quoted elsewhere in this
+section ($0.649$ at $\beta = \sigma = 1$) is therefore one point on a steep surface,
+not a stable property of the method. This is the central reason we treat the
+\emph{ranking} of divergence dimensions, not the absolute magnitude of any lift or
+divergence, as the quantity to trust, and a reason not to read the lift as the
+paper's main result.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+ & $\sigma = 0.5$ & $\sigma = 1.0$ & $\sigma = 2.0$ \\
+\midrule
+$\beta = 0.5$ & 0.12 & 0.36 & 0.66 \\
+$\beta = 1.0$ & 0.36 & 0.66 & 0.86 \\
+$\beta = 2.0$ & 0.66 & 0.86 & 0.95 \\
+$\beta = 4.0$ & 0.86 & 0.95 & 0.98 \\
+\bottomrule
+\end{tabular}
+\caption{Behaviour-prediction lift (mean over three agents, seed~1, structural
+basis) as $\beta$ and $\sigma$ vary. The lift spans $0.12$ to $0.98$, so its
+absolute value is a tuning artefact.}
+\label{tab:sensitivity}
+\end{table}
+
 \subsection{Fast-Mode Approximation Error}
 We compare $\hat{\theta}$ under fast mode (neutral counterfactuals) against
 full-mode (GDJ-scored counterfactuals) and report the mean absolute error per
-dimension, quantifying the cost of the fast-mode approximation.
+dimension, quantifying the cost of the fast-mode approximation. This requires the
+live judge and is not yet measured.
 
 \subsection{GDJ Blind-Critic Ablation}
 We compare feature matrices produced by the critic given the declared purpose

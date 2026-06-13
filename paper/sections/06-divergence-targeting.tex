@@ -12,10 +12,33 @@ necessarily reallocates weight away from others, the divergence profile is
 two-sided and IOR reports both over-valued and neglected dimensions.
 
 \begin{figure}[h]
-\figplaceholder{Figure~\ref{fig:divbars}: ranked divergence bar chart per gym
-agent. Horizontal bars sorted by magnitude, coloured by direction (over-valued
-versus neglected), with posterior standard-deviation whiskers.}
-\caption{Ranked divergence profiles for the gym agents.}
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.85\linewidth, height=4.6cm,
+  xbar, xmin=0, xmax=0.55,
+  xlabel={per-dimension divergence $\delta_i$ (with posterior s.d.)},
+  symbolic y coords={observation\_nonempty, payload\_size, tool\_repetition,
+    parameter\_novelty, action\_novelty},
+  ytick=data, y dir=reverse,
+  enlarge y limits=0.18, tick label style={font=\scriptsize},
+  label style={font=\small},
+]
+\addplot+[xbar, fill=gray!40, draw=black,
+  error bars/.cd, x dir=both, x explicit]
+coordinates {
+  (0.304,observation\_nonempty) +- (0.190,0)
+  (0.170,payload\_size) +- (0.034,0)
+  (0.158,tool\_repetition) +- (0.035,0)
+  (0.012,parameter\_novelty) +- (0.129,0)
+  (0.012,action\_novelty) +- (0.118,0)
+};
+\end{axis}
+\end{tikzpicture}
+\caption{Ranked divergence profile for \texttt{cost_minimiser} on the deterministic
+structural basis (seed~1), with posterior standard-deviation whiskers. The widest
+bars also carry the smallest uncertainty, illustrating how IOR separates confident
+divergence from uncertain inference.}
 \label{fig:divbars}
 \end{figure}
 
