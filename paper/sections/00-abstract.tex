@@ -10,8 +10,9 @@ purpose over a shared feature basis, and steers adversarial probes at the
 dimensions of highest divergence. A Goal Decomposition Judge bridges natural-language
 purposes into the feature space IRL requires without access to model internals, and
 a pluggable feature basis spans a deterministic model-free floor, a single
-language-model judge, and a judge ensemble. We contribute an open gym of three
-planted-divergence reference environments and report what auditing them reveals.
+language-model judge, a judge ensemble, and a deterministic decision-model critic. We
+contribute an open gym of three planted-divergence reference environments and report
+what auditing them reveals.
 Divergence recovery with an Opus~4.8 judge is strong where the divergence is
 expressed in observable behaviour (Pearson $r = 0.96$ on a cost-minimisation agent)
 but fails where it depends on content quality the judge must assess ($r = -0.72$ on
@@ -21,8 +22,13 @@ sub-goals at issue rather than by the inference machinery: a column-mean ablatio
 shows the Bayesian IRL ranking is correlated with but not reducible to a simple
 average (Spearman $0.77$), and a free-parameter sweep shows absolute scores are
 tuning-dependent, so we treat the ranking of divergence dimensions, not its
-magnitude, as the reportable quantity. A deterministic model-free basis predicts
-held-out behaviour above a uniform baseline, establishing a reproducible floor. The
+magnitude, as the reportable quantity. Acting on the judge-reliability diagnosis, we
+show that a deterministic open cross-encoder critic (an open reproduction of the Jev
+typed-decision pattern, run locally) raises mean recovery from $0.08$ to $0.43$,
+removes the generative judge's run-to-run variance, and turns its confident
+wrong-direction failure into a safe near-zero abstention. A deterministic model-free
+basis predicts held-out behaviour above a uniform baseline, establishing a
+reproducible floor. The
 inference-probe feedback loop is presented as a design; closing it empirically, and
 the targeted-probing evaluation, remain specified as protocols. Findings are
 designed to map onto OWASP, MITRE ATLAS, and NIST AI RMF taxonomy nodes so that

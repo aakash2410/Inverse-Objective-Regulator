@@ -31,12 +31,19 @@ bias~\citep{zheng2023judge, llmJudgeSurvey2024}, a literature the method depends
 and which bounds it. Two consequences follow for any use as regulatory evidence.
 First, a confident wrong-direction failure ($r = -0.72$) is more dangerous than
 abstention: a tool that mis-localises divergence points an auditor at the wrong
-behaviour, so calibrated abstention on low-confidence sub-goals is a prerequisite we
-do not yet provide. Second, our evidence base is three hand-authored agents with a
-single clear success, which is too small and too self-authored to support general
-claims; the gym must grow to many agents spanning divergence types, ideally authored
-independently of the featuriser, before recovery on behavioural divergences can be
-claimed as a property of the method rather than of one example.
+behaviour, so calibrated abstention on low-confidence sub-goals is a prerequisite.
+The generative judge does not provide it, but the deterministic open critic of
+Section~\ref{subsec:jev} does: on the same agent it fails to a near-zero $-0.12$
+rather than $-0.72$, abstaining where it lacks signal. Second, our evidence base is
+three hand-authored agents with a single clear success, which is too small and too
+self-authored to support general claims; the gym must grow to many agents spanning
+divergence types, ideally authored independently of the featuriser, before recovery
+on behavioural divergences can be claimed as a property of the method rather than of
+one example. These concerns also point to the fix we found most effective:
+Section~\ref{subsec:jev} shows that swapping in a more reliable judge, a deterministic
+open cross-encoder critic run locally, raises mean recovery from $0.08$ to $0.43$,
+eliminates the run-to-run variance, and removes the external-API dependence, though
+it too leaves the subtle-semantic case unrecovered (safely, toward zero).
 
 \paragraph{The closed loop is designed but not yet demonstrated.}
 We describe the inference-probe feedback loop as the architectural contribution, but

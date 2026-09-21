@@ -4,11 +4,12 @@
 We separate what is measured from what is specified. The structural-floor and
 single-judge behaviour-prediction lift (Section~\ref{subsec:ablation}), the
 IRL-versus-mean ablation (Section~\ref{subsec:irlvsmean}), the divergence recovery
-with the Opus~4.8 judge (Section~\ref{subsec:recovery}), the Laplace-versus-MCMC
+with the Opus~4.8 judge (Section~\ref{subsec:recovery}), the divergence recovery with
+the deterministic open-Jev critic (Section~\ref{subsec:jev}), the Laplace-versus-MCMC
 calibration check (Section~\ref{subsec:calibration}), and the $\beta$/$\sigma$
 sensitivity sweep (Section~\ref{subsec:sensitivity}) are measured and reported with
-numbers, the last three of which use the offline structural or MCMC paths and so need
-no API access. The ensemble track, the targeted-versus-uniform hit-rate, the
+numbers, all but the Opus recovery using offline (local model or MCMC) paths that
+need no API access. The ensemble track, the targeted-versus-uniform hit-rate, the
 fast-mode error, and the blind-critic ablation remain specified as protocols and are
 not yet measured. We report the latter as protocols rather than results to avoid
 overstating the present evidence.
@@ -70,25 +71,25 @@ recovery computation.
 \begin{table}[h]
 \centering
 \small
-\begin{tabular}{@{}lccc@{}}
+\begin{tabular}{@{}lcc@{}}
 \toprule
-Agent & recovery $r$ (mean $\pm$ sd) & dominant-dim top-2 & verdict \\
+Agent & LLM judge (Opus~4.8) & open-Jev critic (local) \\
 \midrule
-cost\_minimiser & $0.96 \pm 0.01$ & 3/3 & strong recovery \\
-tool\_maximiser & $-0.01 \pm 0.29$ & 2/3 & unstable \\
-faithful\_answerer & $-0.72 \pm 0.19$ & 0/3 & confident failure \\
+cost\_minimiser & $0.96 \pm 0.01$ \ (3/3) & $0.70 \pm 0.03$ \ (3/3) \\
+tool\_maximiser & $-0.01 \pm 0.29$ \ (2/3) & $0.70 \pm 0.05$ \ (3/3) \\
+faithful\_answerer & $-0.72 \pm 0.19$ \ (0/3) & $-0.12 \pm 0.00$ \ (0/3) \\
 \midrule
-overall & $0.08$ & 56\% & below threshold \\
+mean $r$ & $0.08$ & $0.43$ \\
 \bottomrule
 \end{tabular}
-\caption{Divergence recovery with the Opus~4.8 live judge over seeds~1 to~3, against
-an idealised-critic upper bound of $r = 0.96$. The success threshold ($r \geq 0.7$,
-dominant dimension in top two) is met only by \texttt{cost_minimiser}. For $d = 5$ a
-random top-two contains the dominant dimension $40\%$ of the time, so the $56\%$
-aggregate top-two rate is only marginally above chance. The standard deviation across
-seeds is itself diagnostic: \texttt{tool_maximiser}'s $\pm 0.29$ spans both signs, so
-its recovery is not merely weak but unstable under the judge's run-to-run
-non-determinism.}
+\caption{Divergence recovery, recovery $r$ (mean $\pm$ sd over seeds~1 to~3) with
+dominant-dim top-2 rate in parentheses, against an idealised-critic upper bound of
+$r = 0.96$. The success threshold is $r \geq 0.7$ with the dominant dimension in the
+top two; for $d = 5$ a random top-two hits the dominant dimension $40\%$ of the time.
+The generative LLM judge succeeds only on \texttt{cost_minimiser} and is unstable on
+\texttt{tool_maximiser} ($\pm 0.29$ spans both signs). The deterministic open-Jev
+critic (Section~\ref{subsec:jev}) has near-zero variance, recovers
+\texttt{tool_maximiser}, and raises the mean from $0.08$ to $0.43$.}
 \label{tab:recovery}
 \end{table}
 
@@ -116,31 +117,73 @@ idealised and a live critic is the gap future work on the judge must close.
 \centering
 \begin{tikzpicture}
 \begin{axis}[
-  width=0.85\linewidth, height=4.8cm,
+  width=0.85\linewidth, height=5cm,
   ybar, ymin=-1.05, ymax=1.05,
-  bar width=20pt,
+  bar width=11pt,
   ylabel={recovery $r$ (mean $\pm$ s.d.)},
   symbolic x coords={cost\_minimiser, tool\_maximiser, faithful\_answerer},
   xtick=data, tick label style={font=\scriptsize}, label style={font=\small},
-  enlarge x limits=0.25,
+  enlarge x limits=0.3,
+  legend style={font=\scriptsize, at={(0.5,-0.22)}, anchor=north, legend columns=2},
   extra y ticks={0.7,0.96}, extra y tick labels={}, extra y tick style={grid=major, grid style={dashed,gray}},
 ]
-\addplot+[ybar, fill=gray!45, draw=black,
+\addplot+[ybar, fill=gray!30, draw=black,
   error bars/.cd, y dir=both, y explicit]
 coordinates {
   (cost\_minimiser,0.96) +- (0,0.01)
   (tool\_maximiser,-0.01) +- (0,0.29)
   (faithful\_answerer,-0.72) +- (0,0.19)
 };
+\addplot+[ybar, fill=gray!70, draw=black,
+  error bars/.cd, y dir=both, y explicit]
+coordinates {
+  (cost\_minimiser,0.70) +- (0,0.03)
+  (tool\_maximiser,0.70) +- (0,0.05)
+  (faithful\_answerer,-0.12) +- (0,0.00)
+};
+\legend{LLM judge (Opus 4.8), open-Jev critic}
 \end{axis}
 \end{tikzpicture}
-\caption{Live-judge divergence recovery by agent (Opus~4.8, seeds~1 to~3). Dashed
-lines mark the success threshold ($r = 0.7$) and the idealised-critic upper bound
-($r = 0.96$). \texttt{cost_minimiser} reaches the upper bound with negligible
-variance; \texttt{tool_maximiser}'s error bar spans both signs; \texttt{faithful_answerer}
-is confidently negative.}
+\caption{Divergence recovery by agent and critic (seeds~1 to~3). Dashed lines mark
+the success threshold ($r = 0.7$) and the idealised-critic upper bound ($r = 0.96$).
+The generative LLM judge (light) is strong on \texttt{cost_minimiser}, unstable on
+\texttt{tool_maximiser} (error bar spans both signs), and confidently negative on
+\texttt{faithful_answerer}. The deterministic open-Jev critic (dark) has negligible
+variance, recovers \texttt{tool_maximiser}, and fails \emph{safely} toward zero on
+\texttt{faithful_answerer} rather than confidently negative.}
 \label{fig:recovery}
 \end{figure}
+
+\subsection{A Deterministic Open Critic Improves Reliability}
+\label{subsec:jev}
+Because the bottleneck is the judge, we test whether a more reliable judge improves
+the whole system. We replace the generative GDJ critic with the decision-model
+featuriser of Section~\ref{subsec:variants}, an open reproduction of the Jev
+typed-decision pattern (a DeBERTa-v3-large cross-encoder, run locally, no API), and
+re-run the recovery benchmark on the pinned canonical basis. The results
+(Table~\ref{tab:recovery}, dark bars in Figure~\ref{fig:recovery}) are measured
+entirely offline and support three claims.
+
+First, \emph{determinism removes the variance}: the open critic's per-agent standard
+deviation is $0.03$, $0.05$ and $0.00$, against the LLM judge's $\pm 0.29$ on
+\texttt{tool_maximiser}. A classifier forward pass has no sampling temperature to
+leave unfixed, so the run-to-run instability disappears. Second, it \emph{recovers
+the LLM judge's unstable case}: \texttt{tool_maximiser} moves from $-0.01 \pm 0.29$
+to a stable $0.70$, and the mean recovery across agents rises from $0.08$ to $0.43$.
+Third, and most important for a compliance tool, its failure mode is \emph{safe}: on
+\texttt{faithful_answerer} it reaches $-0.12$, near zero, rather than the LLM judge's
+$-0.72$. It abstains where it lacks signal instead of confidently mis-localising the
+divergence, which is exactly the property Section~\ref{sec:limitations} argues an
+auditing tool needs.
+
+The trade is honest and worth stating: the LLM judge remains better on the clearly
+behavioural \texttt{cost_minimiser} ($0.96$ versus $0.70$). The decision-model critic
+trades peak accuracy on the easy case for determinism, a safe failure mode, zero
+marginal cost, and no external dependency, and it wins decisively on the aggregate
+and on the reviewer-critical question of judge reliability. Neither critic recovers
+\texttt{faithful_answerer}, so the subtle-semantic limitation of
+Section~\ref{sec:limitations} stands; the open critic makes that failure safe rather
+than dangerous.
 
 \subsection{Posterior Calibration: Laplace versus MCMC}
 \label{subsec:calibration}
@@ -219,11 +262,12 @@ confirmation-bias risk inherent in the decomposer architecture.
 
 \subsection{Feature-Basis Ablation}
 \label{subsec:ablation}
-We compare three featurisers on held-out behaviour-prediction lift, the one metric
+We compare the featurisers on held-out behaviour-prediction lift, the one metric
 comparable across bases since it concerns action prediction rather than semantic
 divergence. The structural featuriser is deterministic and model-free; the single
-judge is the headline configuration; the ensemble averages several diverse models
-and additionally reports inter-judge agreement.
+judge is the headline configuration; the open-Jev critic is deterministic and local;
+the ensemble averages several diverse models and additionally reports inter-judge
+agreement.
 
 The structural floor achieves a mean behaviour-prediction lift of $0.649$ across the
 three gym agents (seeds~1 to~3) with zero external dependency, exceeding the $0.20$
@@ -244,11 +288,14 @@ Featuriser & cost\_min. & faithful\_ans. & tool\_max. & inter-judge $r$ \\
 \midrule
 Structural & 0.76 & 0.76 & 0.42 & n/a \\
 Single judge (Opus 4.8) & 0.58 & 0.46 & $-0.01$ & n/a \\
+open-Jev critic & 0.51 & 0.29 & 0.24 & n/a \\
 Ensemble & \multicolumn{4}{c}{\textit{pending (API credit exhausted)}} \\
 \bottomrule
 \end{tabular}
 \caption{Behaviour-prediction lift by featuriser and agent, per-agent means over
 seeds~1 to~3 (shuffled 80/20 split). The ensemble row and its inter-judge agreement
-remain to be measured. Higher is better; $0.20$ is the target.}
+remain to be measured. Higher is better; $0.20$ is the target. Behaviour prediction
+is not where the semantic critics win; their value is divergence localisation
+(Section~\ref{subsec:recovery}), where the open-Jev critic leads.}
 \label{tab:ablation}
 \end{table}

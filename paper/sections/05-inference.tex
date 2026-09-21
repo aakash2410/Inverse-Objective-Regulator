@@ -230,10 +230,10 @@ a regulatory context.
 \subsection{Feature-Basis Variants}
 \label{subsec:variants}
 
-The GDJ is one of three interchangeable featurisers, all of which satisfy a single
+The GDJ is one of four interchangeable featurisers, all of which satisfy a single
 protocol (decompose then score) so that the inference, divergence, and reporting
 stages depend on the feature interface rather than on any particular
-implementation. The two alternatives exist to address an obvious objection: the
+implementation. The three alternatives exist to address an obvious objection: the
 GDJ depends on an external language model, which introduces cost and a
 reproducibility risk across model versions.
 
@@ -256,5 +256,20 @@ basis that divergence localisation requires. The ensemble additionally reports
 inter-judge agreement (the mean pairwise correlation between judges' score
 matrices) as a quantifiable reliability metric: high agreement indicates that the
 recovered features do not hinge on one model's world-view, which directly answers
-the external-dependence concern. Section~\ref{sec:evaluation} evaluates all three
-featurisers head-to-head on the shared behaviour-prediction metric.
+the external-dependence concern.
+
+The third alternative replaces the generative judge with a decision-model critic:
+an open reproduction of the Jev typed-decision pattern~\citep{typesafeJev2026,
+openJevDeberta2026}, a DeBERTa-v3-large cross-encoder that scores each (state,
+action, observation) against a sub-goal in a single forward pass and returns a
+calibrated probability, with no text generation. It is deterministic (a classifier
+forward pass, no sampling temperature), so it removes the run-to-run variance the
+temperature-deprecated generative judge cannot avoid, and it runs locally, removing
+the external-API dependence entirely. Like the ensemble it preserves the semantic,
+purpose-grounded basis and therefore supports divergence localisation; unlike the
+generative judge it cannot itself generate sub-goals, so it must be paired with a
+pinned or externally supplied goal specification (as the gym does). We reimplement
+its published span-pooled read-out in our own code and load only its weights, so no
+third-party inference code is executed. Section~\ref{sec:evaluation} evaluates all
+four featurisers, and finds (Section~\ref{subsec:jev}) that this deterministic
+critic materially improves divergence recovery over the generative judge.

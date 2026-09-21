@@ -40,8 +40,10 @@ this cell.
   \item The Goal Decomposition Judge, which bridges natural-language declared
   purposes into the feature space that IRL requires without access to model
   weights, together with a pluggable feature basis spanning a deterministic
-  model-free floor, a single judge, and a judge ensemble with quantified
-  agreement.
+  model-free floor, a single judge, a judge ensemble, and a deterministic open
+  decision-model critic; we find the last materially improves divergence-recovery
+  reliability over the generative judge (mean $r$ $0.08 \to 0.43$, with near-zero
+  variance and no external API).
   \item An open gym of three planted-divergence reference agents with deterministic
   seeds, enabling reproducible evaluation of objective recovery.
   \item Divergence reports mapped to OWASP ASI, MITRE ATLAS, and NIST AI RMF nodes,
