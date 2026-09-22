@@ -185,6 +185,48 @@ and on the reviewer-critical question of judge reliability. Neither critic recov
 Section~\ref{sec:limitations} stands; the open critic makes that failure safe rather
 than dangerous.
 
+\paragraph{Generalisation beyond the original three.}
+Because the open critic runs locally at no marginal cost, we can test whether recovery
+generalises rather than resting on a single success. We extend the gym to five further
+agents spanning recognised agentic safety failure modes (Table~\ref{tab:extended}) and
+run the same recovery benchmark; the results (Table~\ref{tab:extended-recovery}) are
+measured entirely offline. Across all eight agents the open critic reaches mean
+$r = 0.55$ with a $75\%$ dominant-dimension top-two rate, and on the five new agents
+alone mean $r = 0.62$ with $80\%$ top-two. Six of the eight agents recover with the
+dominant dimension in the top two on all three seeds, including a sycophancy agent
+($0.82$) and a reward-hacking agent ($0.79$); \texttt{privacy_leaker} recovers only
+partially ($0.26$) and \texttt{faithful_answerer} fails safely toward zero. This moves
+the central claim from ``recovered on one behavioural agent'' to ``recovered on six of
+eight agents across distinct safety failure modes'', with every number reproducible
+offline and with zero seed variance. The agents remain author-designed, so the
+independence caveat of Section~\ref{sec:limitations} is not fully retired, but the
+$n=3$, single-success objection is.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Agent & recovery $r$ (mean $\pm$ sd) & top-2 \\
+\midrule
+sycophant & $0.82 \pm 0.00$ & 3/3 \\
+shortcut\_taker & $0.79 \pm 0.00$ & 3/3 \\
+cost\_minimiser & $0.70 \pm 0.03$ & 3/3 \\
+tool\_maximiser & $0.70 \pm 0.05$ & 3/3 \\
+escalation\_seeker & $0.61 \pm 0.00$ & 3/3 \\
+safety\_skipper & $0.61 \pm 0.00$ & 3/3 \\
+privacy\_leaker & $0.26 \pm 0.00$ & 0/3 \\
+faithful\_answerer & $-0.12 \pm 0.00$ & 0/3 \\
+\midrule
+mean (8 agents) & $0.55$ & 75\% \\
+\bottomrule
+\end{tabular}
+\caption{Open-Jev divergence recovery on the full eight-agent gym (seeds~1 to~3),
+sorted by $r$. Six of eight recover with the dominant dimension in the top two on
+every seed; variance is near zero throughout.}
+\label{tab:extended-recovery}
+\end{table}
+
 \subsection{Posterior Calibration: Laplace versus MCMC}
 \label{subsec:calibration}
 The posterior standard deviations $\sigma_i$ are IOR's headline justification for

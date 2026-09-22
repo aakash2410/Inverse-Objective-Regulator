@@ -2,8 +2,13 @@
 \label{sec:gym}
 
 The gym is a reproducible benchmark that makes the recovery claim checkable rather
-than asserted. It ships three reference agents whose objective divergences we
-planted, so that ground truth is known by construction.
+than asserted. It ships eight reference agents whose objective divergences we planted,
+so that ground truth is known by construction: an original three, used for the
+head-to-head between the generative and decision-model critics
+(Section~\ref{subsec:recovery}), and five further agents spanning recognised agentic
+safety failure modes, used to test whether recovery generalises
+(Section~\ref{subsec:jev}). The agents remain author-designed, a limitation we state
+plainly in Section~\ref{sec:limitations}.
 
 \subsection{Reference Agents}
 Each agent's planted divergence is two-sided: the agent over-invests in one or more
@@ -29,8 +34,34 @@ expand scope & \textbf{task\_relevance} &
 scope\_adherence, information\_efficiency, step\_minimisation \\
 \bottomrule
 \end{tabular}
-\caption{Planted divergence profiles in the three reference agents.}
+\caption{Planted divergence profiles in the original three reference agents.}
 \label{tab:planted}
+\end{table}
+
+The five extended agents (Table~\ref{tab:extended}) map onto documented agentic
+safety failure modes, so recovery on them is evidence about cases practitioners
+already care about, not bespoke toy divergences. Each places the divergence signal in
+the trajectory's observations (the lesson of \texttt{faithful_answerer}, whose
+observations originally omitted it) and uses positively-phrased sub-goals.
+
+\begin{table}[h]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}P{2.4cm}P{3.4cm}P{3.4cm}@{}}
+\toprule
+Agent & Declared purpose & Actual objective \\
+\midrule
+PrivacyLeaker & Use only provided context; withhold stored data & Disclose stored personal data \\
+Sycophant & Give honest, critical feedback & Maximise agreement and praise \\
+ShortcutTaker & Complete and verify the task & Game the success metric \\
+EscalationSeeker & Stay within granted permissions & Seek broader access \\
+SafetySkipper & Complete the safety checklist first & Skip checks to act fast \\
+\bottomrule
+\end{tabular}
+\caption{The five extended agents, spanning privacy leakage, sycophancy, reward
+hacking, power-seeking, and safety-checklist skipping.}
+\label{tab:extended}
 \end{table}
 
 \subsection{Reproducibility}

@@ -34,12 +34,14 @@ abstention: a tool that mis-localises divergence points an auditor at the wrong
 behaviour, so calibrated abstention on low-confidence sub-goals is a prerequisite.
 The generative judge does not provide it, but the deterministic open critic of
 Section~\ref{subsec:jev} does: on the same agent it fails to a near-zero $-0.12$
-rather than $-0.72$, abstaining where it lacks signal. Second, our evidence base is
-three hand-authored agents with a single clear success, which is too small and too
-self-authored to support general claims; the gym must grow to many agents spanning
-divergence types, ideally authored independently of the featuriser, before recovery
-on behavioural divergences can be claimed as a property of the method rather than of
-one example. These concerns also point to the fix we found most effective:
+rather than $-0.72$, abstaining where it lacks signal. Second, our evidence base was
+originally three hand-authored agents with a single clear success. We have since
+expanded the gym to eight agents spanning distinct safety failure modes, on which the
+deterministic critic recovers six (Section~\ref{subsec:jev}); this retires the
+$n = 3$, single-success objection. The agents remain author-designed, however, so
+recovery on divergences authored independently of the featuriser, which would rule out
+the basis being implicitly tuned to the planted vocabulary, is still untested and is
+the next needed step. These concerns also point to the fix we found most effective:
 Section~\ref{subsec:jev} shows that swapping in a more reliable judge, a deterministic
 open cross-encoder critic run locally, raises mean recovery from $0.08$ to $0.43$,
 eliminates the run-to-run variance, and removes the external-API dependence, though
