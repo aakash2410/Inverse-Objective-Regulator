@@ -101,6 +101,26 @@ If IOR can correctly uncover the secret goal we planted, we have evidence it wor
 
 ---
 
+## Results
+
+The score is the correlation (r) between the gap we planted and the gap IOR found: 1.0 is perfect, 0 is chance, negative means IOR pointed the wrong way. Seeds 1 to 3 per agent.
+
+| Judge | Model | Mean r, original 3 agents | Mean r, all 8 agents | Agents where the planted gap ranks top-2 on every seed | Run-to-run variance |
+|---|---|---|---|---|---|
+| Frontier LLM judge | `claude-opus-4-8` | 0.08 | not measured | 1 of 3 | not measured (one run per seed) |
+| Open cross-encoder critic | `com-kotobalabs/open-jev-deberta-v3-large` (local) | 0.42 | 0.55 | 6 of 8 | none: two full runs gave bit-identical scores |
+
+The fine print:
+- Swapping the LLM judge for the local critic is what moves the original-three mean from 0.08 to 0.42. Both use the same agents, seeds and inference.
+- If you also require r ≥ 0.7 (the paper's success bar), the critic recovers 3 of 8, not 6.
+- Four of the five newer agents produce identical behaviour on every seed, so their "every seed" results are really one sample each.
+
+**Reproduce:** `python3.11 scripts/run_jev_recovery.py` (critic row, offline, writes `paper/jev_recovery.json`) and `python3.11 scripts/run_baseline.py --models claude-opus-4-8` (LLM row, needs an Anthropic API key, writes `paper/baseline_results.json`).
+
+**Limitations** (from the paper): IOR only sees gaps along dimensions it can derive from the declared purpose, its accuracy is capped by how reliable the judge is, every gym agent was written by us, and the full feedback loop is designed but not yet demonstrated.
+
+---
+
 ## What IOR is NOT
 
 To be clear and honest about the limits:
@@ -130,4 +150,4 @@ To be clear and honest about the limits:
 
 ## Project status
 
-This is research-stage software accompanying an academic paper. The core engine (watching behaviour, inferring the real goal, measuring the gap) is built and tested. The probing-and-reporting stages are implemented and being refined. See the [paper outline](paper/outline.md) for the full technical story.
+This is research-stage software accompanying a complete paper draft ([paper/main.tex](paper/main.tex), compiles to 21 pages), not yet on arXiv. The core engine (watching behaviour, inferring the real goal, measuring the gap) is built and tested. The probing-and-reporting stages are implemented and being refined.

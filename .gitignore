@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+.venv/
+
+# macOS
+.DS_Store
+
+# LaTeX build artefacts (paper/.gitignore also ignores these, plus main.pdf)
+*.aux
+*.log
+*.bbl
+*.blg
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+# Local Claude Code guidelines
+CLAUDE.md
+
+# Confidential, never commit
+funding/
